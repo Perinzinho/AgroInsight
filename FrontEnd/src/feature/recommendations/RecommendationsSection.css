@@ -1,0 +1,27 @@
+.recommendations {
+  width: min(1168px, calc(100% - 32px));
+  margin: 48px auto 0;
+  text-align: left;
+}
+
+.recommendations__header { margin-bottom: 20px; }
+
+.recommendations__header h2 {
+  margin: 0 0 4px;
+  color: var(--recommendations-text);
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.recommendations__header p {
+  margin: 0;
+  color: var(--recommendations-muted);
+  font-size: 13px;
+}
+
+.recommendations__list { display: grid; gap: 18px; }
+
+@media (max-width: 640px) {
+  .recommendations { margin-top: 32px; }
+  .recommendations__header h2 { font-size: 23px; }
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Recomendações — Plano de Ação 4.0",
+  "subtitle": "Ações priorizadas para recuperar a produtividade na próxima safra.",
+  "sprayingSystemCalibration": {
+    "priority": "P1",
+    "title": "Calibração imediata do sistema de pulverização",
+    "description": "Diagnóstico: bomba, bicos e sensores de pressão 10 psi fora do range. Realizar teste de deposição com papéis hidrossensíveis e aferir vazão real por hectare. Não realizar pulverização sem conferência prévia de pressão e vazão."
+  },
+  "fertilizerRateControl": {
+    "priority": "P1",
+    "title": "Revisar a regulagem da distribuidora de fertilizantes (rate control)",
+    "description": "Aplicação 24–16% abaixo da configuração média. Calibrar a célula de carga, validar rotação TDP. Recalibrar taxa base, comparar resultados. Use validar os itens referentes à análise de solo antes do próximo plantio."
+  },
+  "leafhopperEmergencyControl": {
+    "priority": "P1",
+    "title": "Controle emergencial da cigarrinha-do-milho (Dalbulus maidis)",
+    "description": "Pressão de 7.809 insetos capturados. Se a área maior que 80% não foi colhida, considerar o manejo integrado: destruição de tigueras, escalonamento de plantio e uso de inseticidas tolerantes ao enfezamento."
+  },
+  "idleTimeReduction": {
+    "priority": "P2",
+    "title": "Reduzir ociosidade e otimizar janelas operacionais",
+    "description": "Dias com operação e horas paradas na geral real vs. planejamento. Criar protocolos de startup. Fila de operações e telemetria em tempo real com alertas de desvio. Monitorar velocidade e plantio."
+  },
+  "climateGuidedPlanning": {
+    "priority": "P3",
+    "title": "Planejamento agronômico guiado por clima (IA/meteorologia)",
+    "description": "Chuva concentrada (303 mm em 8 dias) e 248 mm em 28°C. Usar previsão de curto prazo para programar pulverização, foliar e irrigação suplementar na florescência. Acompanhar índice de estresse hídrico e umidade do satélite."
+  },
+  "applicationDataGovernance": {
+    "priority": "P3",
+    "title": "Governança de dados: dashboard de eficiência de aplicação",
+    "description": "Integrar em API única os dados da máquina (ISO-XML/telemetria), estação meteorológica e armadilhas IoT. Criar alertas automáticos quando captura maior que 95% do alvo em cigarrinha e telemetria com fechamento diário de 96% de eficiência."
+  }
+}
