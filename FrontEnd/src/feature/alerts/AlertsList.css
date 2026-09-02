@@ -1,0 +1,6 @@
+.alerts-list {
+  display: grid;
+  gap: 20px;
+  width: min(1168px, calc(100% - 32px));
+  margin: 0 auto;
+}

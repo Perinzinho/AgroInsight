@@ -1,0 +1,43 @@
+.alert-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  gap: 28px;
+  align-items: start;
+  min-height: 156px;
+  padding: 25px 28px 24px 46px;
+  overflow: hidden;
+  color: #f1f7f3;
+  text-align: left;
+  background: #06150f;
+  border: 1px solid #17382b;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+.alert-card__accent {
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 22px;
+  width: 4px;
+  background: var(--alert-accent);
+  border-radius: 999px;
+}
+
+.alert-card__identifier { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
+.alert-card__level { margin-bottom: 9px; color: var(--alert-accent); font-size: 12px; font-weight: 750; letter-spacing: .02em; text-transform: uppercase; }
+.alert-card__number { color: #f1f7f3; font-size: 31px; font-weight: 750; letter-spacing: .04em; }
+.alert-card__content { min-width: 0; }
+.alert-card__title { margin: 0 0 10px; color: #f1f7f3; font: 700 18px/1.25 inherit; letter-spacing: 0; }
+.alert-card__description { max-width: 920px; margin: 0; color: #70837a; font-size: 14px; line-height: 1.35; letter-spacing: 0; }
+
+@media (max-width: 640px) {
+  .alert-card { grid-template-columns: 70px minmax(0, 1fr); gap: 16px; min-height: auto; padding: 20px 18px 20px 34px; }
+  .alert-card__accent { top: 18px; bottom: 18px; left: 16px; width: 3px; }
+  .alert-card__level { font-size: 10px; }
+  .alert-card__number { font-size: 25px; }
+  .alert-card__title { font-size: 16px; }
+  .alert-card__description { font-size: 13px; }
+  .alert-card__action { grid-column: 2; }
+}

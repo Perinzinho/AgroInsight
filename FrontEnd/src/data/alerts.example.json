@@ -1,0 +1,22 @@
+{
+  "pressureZero": {
+    "number": "01",
+    "title": "Pressão de pulverização registrada em 0 psi",
+    "description": "O arquivo de pressão apresenta leitura zerada em todas as linhas. Isso não prova falha da pulverização; pode indicar sensor, telemetria ou exportação sem valor válido."
+  },
+  "leafhopperPressure": {
+    "number": "02",
+    "title": "Pressão elevada de cigarrinha nas armadilhas",
+    "description": "A cigarrinha foi, de longe, a praga mais detectada no período monitorado e merece correlação com estágio da cultura, localização e produtividade."
+  },
+  "lowCorrectiveApplication": {
+    "number": "03",
+    "title": "Aplicação de corretivos abaixo do configurado",
+    "description": "Os dados de fertilização mostram subaplicação relevante em calagem e gessagem quando comparadas à dose configurada."
+  },
+  "criticalWaterDeficit": {
+    "number": "04",
+    "title": "Déficit hídrico em semanas críticas",
+    "description": "O balanço semanal mostra períodos em que a precipitação ficou abaixo da evapotranspiração, formando janelas de déficit hídrico potencial."
+  }
+}
