@@ -1,10 +1,10 @@
 
 export interface PestDetectionItemDTO {
-  
   id: number;
   label: string;
   scientificName?: string;
   value: number;
+  color?: string;
   culture?: string;
 }
 
@@ -22,4 +22,14 @@ export function toChartItems(
     label: item.label,
     value: item.value,
   }));
+}
+
+export function toPieChartData(dto: PestDetectionChartDTO): {
+  items: { label: string; value: number }[];
+  colors: string[];
+} {
+  return {
+    items: toChartItems(dto),
+    colors: dto.items.map((item) => item.color ?? '#52B788'),
+  };
 }

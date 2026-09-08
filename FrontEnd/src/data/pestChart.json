@@ -8,6 +8,7 @@
       "label": "Cigarrinha",
       "scientificName": "Dalbulus maidis",
       "value": 7789,
+      "color": "#38BDF8",
       "culture": "Milho"
     },
     {
@@ -15,6 +16,7 @@
       "label": "Lagarta Spodoptera",
       "scientificName": "Spodoptera spp.",
       "value": 848,
+      "color": "#52B788",
       "culture": "Milho"
     },
     {
@@ -22,6 +24,7 @@
       "label": "Lagarta Helicoverpa",
       "scientificName": "Helicoverpa spp.",
       "value": 48,
+      "color": "#E9C46A",
       "culture": "Milho"
     },
     {
@@ -29,6 +32,7 @@
       "label": "Vaquinha",
       "scientificName": "Diabrotica speciosa",
       "value": 21,
+      "color": "#E76F51",
       "culture": "Milho"
     }
   ]

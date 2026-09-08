@@ -1,0 +1,37 @@
+{
+  "title": "Aplicado × configurado por operação",
+  "subtitle": "Média ponderada pela área aplicada; 100% = dose configurada",
+  "weightedAverage": 90.7,
+  "unit": "% aplicado",
+  "totalOperations": 4,
+  "items": [
+    {
+      "id": 1,
+      "operation": "CALAGEM",
+      "label": "Calagem",
+      "value": 84.5,
+      "color": "#E76F51"
+    },
+    {
+      "id": 2,
+      "operation": "GESSAGEM",
+      "label": "Gessagem",
+      "value": 86.2,
+      "color": "#0EA5E9"
+    },
+    {
+      "id": 3,
+      "operation": "PLANTIO_MILHO_GRAO",
+      "label": "Plantio milho grão",
+      "value": 98.8,
+      "color": "#264653"
+    },
+    {
+      "id": 4,
+      "operation": "PLANTIO_MILHO_SILAGEM",
+      "label": "Plantio milho silagem",
+      "value": 95.3,
+      "color": "#52B788"
+    }
+  ]
+}

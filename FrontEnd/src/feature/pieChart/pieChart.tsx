@@ -22,7 +22,10 @@ interface DonutChartProps {
   colors?: string[];
   title?: string;
   subtitle?: string;
-  unit?: string; // texto abaixo do número central e no total (ex: "insetos")
+  unit?: string;
+  centerValue?: number;
+  centerLabel?: string;
+  footerText?: string;
 }
 
 const defaultColors = [
@@ -82,11 +85,15 @@ export default function PieChart({
   title,
   subtitle,
   unit = '',
+  centerValue,
+  centerLabel = unit,
+  footerText,
 }: DonutChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
 
   const total = items.reduce((soma, item) => soma + item.value, 0);
+  const displayedCenterValue = centerValue ?? total;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -136,14 +143,19 @@ export default function PieChart({
           },
         },
       },
-      plugins: [createCenterTextPlugin(total.toLocaleString('pt-BR'), unit)],
+      plugins: [
+        createCenterTextPlugin(
+          displayedCenterValue.toLocaleString('pt-BR'),
+          centerLabel,
+        ),
+      ],
     });
 
     return () => {
       chartRef.current?.destroy();
       chartRef.current = null;
     };
-  }, [items, colors, title, subtitle, unit, total]);
+  }, [items, colors, title, subtitle, unit, centerValue, centerLabel, total, displayedCenterValue]);
 
   return (
     <div
@@ -200,7 +212,7 @@ export default function PieChart({
           color: '#8FA79E',
         }}
       >
-        Total: {total.toLocaleString('pt-BR')} {unit}
+        {footerText ?? `Total: ${total.toLocaleString('pt-BR')} ${unit}`}
       </div>
     </div>
   );
