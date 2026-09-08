@@ -1,0 +1,35 @@
+{
+  "title": "Insetos mais capturados pelas câmeras",
+  "subtitle": "Total de detecções registradas (traps_events)",
+  "unit": "capturas",
+  "items": [
+    {
+      "id": 23,
+      "label": "Cigarrinha",
+      "scientificName": "Dalbulus maidis",
+      "value": 7789,
+      "culture": "Milho"
+    },
+    {
+      "id": 16,
+      "label": "Lagarta Spodoptera",
+      "scientificName": "Spodoptera spp.",
+      "value": 848,
+      "culture": "Milho"
+    },
+    {
+      "id": 21,
+      "label": "Lagarta Helicoverpa",
+      "scientificName": "Helicoverpa spp.",
+      "value": 48,
+      "culture": "Milho"
+    },
+    {
+      "id": 25,
+      "label": "Vaquinha",
+      "scientificName": "Diabrotica speciosa",
+      "value": 21,
+      "culture": "Milho"
+    }
+  ]
+}

@@ -31,9 +31,14 @@ const defaultColors = [
   '#0F766E', 
   '#0EA5E9', 
   '#E9C46A', 
+  '#9D4EDD', 
+  '#E76F51', 
+  '#F4A261', 
+  '#EF476F', 
+  '#264653', 
 ];
 
-// 👉 Plugin que desenha o número + label no centro do donut
+// Plugin que desenha o número + label no centro do donut
 function createCenterTextPlugin(value: string, label: string): Plugin<'doughnut'> {
   return {
     id: 'centerText',

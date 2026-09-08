@@ -2,5 +2,8 @@
   { "label": "Soja", "value": 35 },
   { "label": "Milho", "value": 25 },
   { "label": "Trigo", "value": 20 },
-  { "label": "Café", "value": 20 }
+  { "label": "Café", "value": 20 },
+  {"label": "Algodão", "value": 15 },
+  {"label": "Cana-de-açúcar", "value": 10 },
+  {"label": "Arroz", "value": 5 }
 ]
