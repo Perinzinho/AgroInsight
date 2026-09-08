@@ -16,7 +16,7 @@ function App() {
   return (
     <div style={{ width: '400px' }}>
       <div>
-        <PieChart
+        {/*<PieChart
           title={chartData.title}
           subtitle={chartData.subtitle}
           unit={chartData.unit}
@@ -34,7 +34,7 @@ function App() {
           footerText={`Total: ${fertilizationData.totalOperations} operações`}
           items={fertilizationChartData.items}
           colors={fertilizationChartData.colors}
-        />
+        />*/}
       </div>
     </div>
   )

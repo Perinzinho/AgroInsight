@@ -41,6 +41,27 @@ const defaultColors = [
   '#264653', 
 ];
 
+const formatValue = (value: number) =>
+  value.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+
+function fitText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  maxFontSize: number,
+  minFontSize: number,
+) {
+  let fontSize = maxFontSize;
+
+  while (fontSize > minFontSize) {
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    if (ctx.measureText(text).width <= maxWidth) break;
+    fontSize -= 1;
+  }
+
+  return fontSize;
+}
+
 // Plugin que desenha o número + label no centro do donut
 function createCenterTextPlugin(value: string, label: string): Plugin<'doughnut'> {
   return {
@@ -54,8 +75,9 @@ function createCenterTextPlugin(value: string, label: string): Plugin<'doughnut'
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      const valueFontSize = 28;
-      const labelFontSize = 13;
+      const maxTextWidth = Math.max(80, chartArea.width * 0.7);
+      const valueFontSize = fitText(ctx, value, maxTextWidth, 28, 18);
+      const labelFontSize = fitText(ctx, label, maxTextWidth, 13, 9);
       const gap = 4; // espaço entre as duas linhas
 
       // Calcula a altura total do bloco de texto (as duas linhas juntas)
@@ -94,6 +116,7 @@ export default function PieChart({
 
   const total = items.reduce((soma, item) => soma + item.value, 0);
   const displayedCenterValue = centerValue ?? total;
+  const chartColors = colors?.length ? colors : defaultColors;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -112,8 +135,9 @@ export default function PieChart({
         datasets: [
           {
             data,
-            backgroundColor: colors ?? defaultColors,
+            backgroundColor: chartColors,
             borderWidth: 0,
+            hoverOffset: 6,
           },
         ],
       },
@@ -155,7 +179,7 @@ export default function PieChart({
       chartRef.current?.destroy();
       chartRef.current = null;
     };
-  }, [items, colors, title, subtitle, unit, centerValue, centerLabel, total, displayedCenterValue]);
+  }, [items, chartColors, title, subtitle, unit, centerValue, centerLabel, total, displayedCenterValue]);
 
   return (
     <div
@@ -163,7 +187,8 @@ export default function PieChart({
         background: '#0B1414',
         borderRadius: '16px',
         padding: '20px',
-        width: '280px',
+        width: 'min(100%, 420px)',
+        boxSizing: 'border-box',
         color: '#E7F0EC',
         fontFamily: 'sans-serif',
       }}
@@ -177,7 +202,7 @@ export default function PieChart({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
           gap: '8px',
           marginTop: '20px',
         }}
@@ -185,18 +210,39 @@ export default function PieChart({
         {items.map((item, index) => (
           <div
             key={item.label}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              minWidth: 0,
+              fontSize: '13px',
+            }}
           >
             <span
               style={{
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                backgroundColor: (colors ?? defaultColors)[index % (colors ?? defaultColors).length],
+                flex: '0 0 10px',
+                backgroundColor: chartColors[index % chartColors.length],
                 display: 'inline-block',
               }}
             />
-            {item.label}
+            <span
+              title={item.label}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {item.label}
+            </span>
+            <strong style={{ flex: '0 0 auto', color: '#E7F0EC', fontSize: '12px' }}>
+              {formatValue(item.value)}
+            </strong>
           </div>
         ))}
       </div>
@@ -212,7 +258,7 @@ export default function PieChart({
           color: '#8FA79E',
         }}
       >
-        {footerText ?? `Total: ${total.toLocaleString('pt-BR')} ${unit}`}
+        {footerText ?? `Total: ${formatValue(total)} ${unit}`}
       </div>
     </div>
   );
