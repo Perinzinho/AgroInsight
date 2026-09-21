@@ -11,9 +11,14 @@ Retangulos da evidência que merece investigação (Gustavo)
 Recomendações (fim da página também) (Gustavo)
 
 gráfico de linha balanço hídrico
-(Joaquim)
 
+(Joaquim)
 
 gráfico de pizza (insetos e operação) (perin)
 
 gráfico de barra (temperatura e chuva)   --- falta decidir
+
+para testar cd AgroInsight/FrontEnd
+npm install
+npm install jspdf html2canvas
+npm run dev
