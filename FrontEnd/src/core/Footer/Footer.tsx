@@ -8,14 +8,13 @@ export default function Footer() {
         <p>Unimar</p>
         
         <div className="links">
-          <a href="https://github.com/seu-usuario" target="_blank">Thiago</a>
-          <a href="https://github.com/seu-usuario" target="_blank">Noah</a>
-          <a href="https://github.com/seu-usuario" target="_blank">Gustavo</a>
-          <a href="https://github.com/seu-usuario" target="_blank">Joaquim</a>
-          <a href="https://github.com/seu-usuario" target="_blank">Perin</a>
+          <a href="https://github.com/HulkTheCreator" target="_blank">Thiago</a>
+          <a href="https://github.com/DevNoahF" target="_blank">Noah</a>
+          <a href="https://github.com/GustavosJesusSec" target="_blank">Gustavo</a>
+          <a href="https://github.com/JoaquimAugusto-Oliveira" target="_blank">Joaquim</a>
+          <a href="hhttps://github.com/Perinzinho" target="_blank">Perin</a>
         </div>
       </div>
     </footer>
   )
 }
-
