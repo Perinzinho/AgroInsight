@@ -6,13 +6,14 @@ export default function Header(){
     <div id="relatorio">
     <header className="header">
         <div className="header-content">
-            <h1>Agroinsight!</h1>
-            <button type="button" onClick={exportarPDF}>
-              Export PDF
+            <h1 className="header-logo">
+              AgroInsight <span className="header-logo-version">4.0</span>
+            </h1>
+            <button type="button" className="header-export-btn" onClick={exportarPDF}>
+              Exportar relatório PDF
             </button>
         </div>
     </header>
     </div>
   )  
 }
-
