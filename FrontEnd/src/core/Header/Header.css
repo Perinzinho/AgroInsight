@@ -1,12 +1,13 @@
 .header{
-    background-color: #000;
-    border-bottom: 5px solid green;
-    padding-top: 30px;
-    padding-right: 30px;
-    padding-left: 30px;
-    padding-bottom: 30px;
+    background-color: #05130D;
+    border-bottom: 1px solid #17382B;
+    padding-top: 28px;
+    padding-right: 48px;
+    padding-left: 48px;
+    padding-bottom: 28px;
     position: sticky;
     top: 0;
+    z-index: 10;
 }
 
 .header-content{
@@ -15,14 +16,30 @@
     align-items: center;
 }
 
-.header-content h1{
-    color:white;
+.header-logo{
+    color: #F1F7F3;
+    font-size: 28px;
+    font-weight: 700;
     margin: 0;
+    letter-spacing: -0.01em;
 }
 
-.header-content button{
-    background-color: green;
+.header-logo-version{
+    color: #55C89E;
+}
+
+.header-export-btn{
+    background-color: #55C89E;
     border: none;
-    color: black;
-    padding: 15px 28px;
+    border-radius: 8px;
+    color: #06150F;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 26px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.header-export-btn:hover{
+    background-color: #8BE0BF;
 }
