@@ -125,7 +125,7 @@ export default function Shell() {
           </DataState>
         ) : (
           <>
-            <FiltersBar hideEntityFilters={active.id === 'clima'} hideCustomDates={active.id === 'armadilha'} />
+            <FiltersBar />
 
             <DataState
               status={agro.status}
