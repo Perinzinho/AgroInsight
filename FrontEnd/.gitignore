@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# JSONs derivados dos CSVs: gerados por `npm run data:build` antes do build
+public/data
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

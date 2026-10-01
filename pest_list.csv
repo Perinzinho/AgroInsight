@@ -1,0 +1,87 @@
+MIIP_PEST_ID;MIIP_PEST_CLASSIFICATION;MIIP_PEST_NAME_POPULAR;MIIP_PEST_NAME_SCIENTIFIC;MIIP_PEST_CULTURE;MIIP_PEST_PHEROMONES;MIIP_PEST_ALERT;MIIP_PEST_CONTROL;MIIP_PEST_DAMAGE
+17;Inseto;Lagarta Spodoptera;Spodoptera spp.;Soja;Biospodoptera - Sopodoptera Frugiperda;2;3;4
+21;Inseto;Lagarta Helicoverpa;Helicoverpa spp.;Milho;Biohelicoverpa - Helicoverpa Armigera;2;5;6
+22;Inseto;Lagarta Helicoverpa;Helicoverpa spp.;Soja;Biohelicoverpa - Helicoverpa Armigera;2;5;6
+16;Inseto;Lagarta Spodoptera;Spodoptera spp.;Milho;Biospodoptera - Spodoptera Frugiperda;2;4;5
+24;Inseto;Lagarta - Elasmo;Elasmopalpus lignosellus;Soja;Não Possui;2;3;5
+25;Inseto;Vaquinha;Diabrotica speciosa;Milho;Não Possui;2;4;6
+26;Inseto;Vaquinha;Diabrotica speciosa;Soja;Não Possui;2;4;6
+28;Inseto;Lagarta Helicoverpa;Helicoverpa spp.;Tomate;Bio Helicoverpa - Helicoverpa Armígera;2;5;6
+29;Inseto;Lagarta Spodoptera;Spodoptera spp.;Tomate;Bio Spodoptera - Spodoptera Frugiperda;2;3;4
+30;Inseto;Vaquinha;Diabrotica speciosa;Tomate;Não Possui;2;3;4
+31;Inseto;Broca Pequena Do Tomateiro;Broca Neoleucinodes;Tomate;Bio Neo;1;2;4
+32;Inseto;Mosca Branca;Bemisia tabaci;Tomate;Não Possui;1;2;3
+33;Inseto;Bicho-furão-dos-citrus;Ecdytolopha aurantiana;Citrus;Ferocitrus Furão;5;9;10
+64;Inseto;Cigarrinha;D. costalimai, a. citrina, o. facialis e b. xanthophis;Citrus;Não Possui;1;2;3
+65;Inseto;Minador-dos-citrus;Phyllocnistis citrella;Citrus;Ferocitrus minador;1;2;3
+66;Inseto;mosca das frutas;Ceratitis capitata e anastrepha fraterculus;Citrus;Bio Trimedlure - Para Ceratitis Capitata;1;3;4
+67;Inseto;Bicudo-do-algodoeiro;Anthonomus grandis;Algodão;Luretape BW-10;1;1;2
+20;Inseto;Lagarta Falsa-medideira;Chrysodeixis includens, rachiplusia nu, trichoplusia ni;Soja;Bio Pseudoplusia - Chrysodeixis includens;2;3;4
+23;Inseto;Cigarrinha;Dalbulus maidis;Milho;Armadilha amarela;15;20;30
+60051;Inseto;Psilideo;Diaphorina citri;Citrus;Não Possui -Somente Armadilha Amarela;1;2;3
+34;Inseto;Psilídeo;Diaphorina citri;Citrus;Não Possui -Somente Armadilha Amarela;1;2;3
+27;Inseto;Traça-do-tomateiro;Tuta absoluta;Tomate;Bio Tuta;2;4;5
+91351;Doença;míldio da videira;Plasmopara viticola;Uva;Não Há;3;6;9
+91352;Doença;Oídio Da Videira;Uncinula necator (Schwein.) Burril;Uva;Não Há;3;6;9
+91354;Inseto;Mosca-das-frutos/mosca-do-mediterrâneo;Ceratitis capitata;Uva;Bio Trimedlure Bio Controle;2;4;6
+239201;Inseto;cochonilha-pérola-da-terra;Eurhizococcus brasiliensis;Uva;Não Há;5;10;15
+239203;Inseto;Ácaro Rajado;Tetranychus urticae;Uva;Não Há;10;15;20
+239208;Inseto;Traça-dos-cachos-da-videira;Lobesia botrana;Uva;Bio Lobesia;2;4;6
+239202;Inseto;Tripes;Frankliniella sp;Uva;Piso Azul;20;25;30
+239204;Inseto;Cigarrinha-da-uva;Empoasca vitis;Uva;Piso Amarelo;5;10;15
+239209;Doença;Antracnose;Elsinoe ampelina;Uva;Ñão Há;5;10;20
+239205;Inseto;broca-do-caule-da-videira;Neoterius sp. , Cryptoblabes gnidiella (Millière, 1864);Uva;n;1;2;3
+239210;Doença;Cancro Da Videira;Xanthomonas campestris pv viticola;Uva;Não Há;1;2;3
+239211;Doença;Mancha-das-folhas;Pseudocercospora vitis;Uva;Não Há;2;4;6
+1176701;Inseto;Dano Spodoptera;Dano Spodoptera;Milho;SA;1;2;3
+1176702;Inseto;Dano Percevejo;Dano Percevejo;Milho;Sa;1;2;3
+1176712;Inseto;Percevejo Gaúcho;Leptoglossus zonatus;Milho;Sa;1;2;3
+1176714;Inseto;Daninha Folha Estreita;Daninha Folha Estreita;Milho;Sa;1;2;3
+1176707;Inseto;Percevejo Barriga Verde;D. melacanthus e dichelops furcatus;Milho;Sa;1;2;3
+1176711;Inseto;Percevejo Marrom;Euschistus heros;Milho;Sa;1;2;3
+1176713;Inseto;Percevejo Verde;Nezara viridula;Milho;Sa;1;2;3
+1176715;Inseto;Daninha Folha Larga;Daninha Folha Larga;Milho;Sa;1;2;3
+1176716;Inseto;Doenças Milho;Doenças milho;Milho;Sa;1;2;3
+17;Inseto;Lagarta Spodoptera;Spodoptera spp.;Soja;Biospodoptera - Sopodoptera Frugiperda;2;3;4
+21;Inseto;Lagarta Helicoverpa;Helicoverpa spp.;Milho;Biohelicoverpa - Helicoverpa Armigera;2;5;6
+22;Inseto;Lagarta Helicoverpa;Helicoverpa spp.;Soja;Biohelicoverpa - Helicoverpa Armigera;2;5;6
+16;Inseto;Lagarta Spodoptera;Spodoptera spp.;Milho;Biospodoptera - Spodoptera Frugiperda;2;4;5
+24;Inseto;Lagarta - Elasmo;Elasmopalpus lignosellus;Soja;Não Possui;2;3;5
+25;Inseto;Vaquinha;Diabrotica speciosa;Milho;Não Possui;2;4;6
+26;Inseto;Vaquinha;Diabrotica speciosa;Soja;Não Possui;2;4;6
+28;Inseto;Lagarta Helicoverpa;Helicoverpa spp.;Tomate;Bio Helicoverpa - Helicoverpa Armígera;2;5;6
+29;Inseto;Lagarta Spodoptera;Spodoptera spp.;Tomate;Bio Spodoptera - Spodoptera Frugiperda;2;3;4
+30;Inseto;Vaquinha;Diabrotica speciosa;Tomate;Não Possui;2;3;4
+31;Inseto;Broca Pequena Do Tomateiro;Broca Neoleucinodes;Tomate;Bio Neo;1;2;4
+32;Inseto;Mosca Branca;Bemisia tabaci;Tomate;Não Possui;1;2;3
+33;Inseto;Bicho-furão-dos-citrus;Ecdytolopha aurantiana;Citrus;Ferocitrus Furão;5;9;10
+64;Inseto;Cigarrinha;D. costalimai, a. citrina, o. facialis e b. xanthophis;Citrus;Não Possui;1;2;3
+65;Inseto;Minador-dos-citrus;Phyllocnistis citrella;Citrus;Ferocitrus minador;1;2;3
+66;Inseto;mosca das frutas;Ceratitis capitata e anastrepha fraterculus;Citrus;Bio Trimedlure - Para Ceratitis Capitata;1;3;4
+67;Inseto;Bicudo-do-algodoeiro;Anthonomus grandis;Algodão;Luretape BW-10;1;1;2
+20;Inseto;Lagarta Falsa-medideira;Chrysodeixis includens, rachiplusia nu, trichoplusia ni;Soja;Bio Pseudoplusia - Chrysodeixis includens;2;3;4
+23;Inseto;Cigarrinha;Dalbulus maidis;Milho;Armadilha amarela;15;20;30
+60051;Inseto;Psilideo;Diaphorina citri;Citrus;Não Possui -Somente Armadilha Amarela;1;2;3
+34;Inseto;Psilídeo;Diaphorina citri;Citrus;Não Possui -Somente Armadilha Amarela;1;2;3
+27;Inseto;Traça-do-tomateiro;Tuta absoluta;Tomate;Bio Tuta;2;4;5
+91351;Doença;míldio da videira;Plasmopara viticola;Uva;Não Há;3;6;9
+91352;Doença;Oídio Da Videira;Uncinula necator (Schwein.) Burril;Uva;Não Há;3;6;9
+91354;Inseto;Mosca-das-frutos/mosca-do-mediterrâneo;Ceratitis capitata;Uva;Bio Trimedlure Bio Controle;2;4;6
+239201;Inseto;cochonilha-pérola-da-terra;Eurhizococcus brasiliensis;Uva;Não Há;5;10;15
+239203;Inseto;Ácaro Rajado;Tetranychus urticae;Uva;Não Há;10;15;20
+239208;Inseto;Traça-dos-cachos-da-videira;Lobesia botrana;Uva;Bio Lobesia;2;4;6
+239202;Inseto;Tripes;Frankliniella sp;Uva;Piso Azul;20;25;30
+239204;Inseto;Cigarrinha-da-uva;Empoasca vitis;Uva;Piso Amarelo;5;10;15
+239209;Doença;Antracnose;Elsinoe ampelina;Uva;Ñão Há;5;10;20
+239205;Inseto;broca-do-caule-da-videira;Neoterius sp. , Cryptoblabes gnidiella (Millière, 1864);Uva;n;1;2;3
+239210;Doença;Cancro Da Videira;Xanthomonas campestris pv viticola;Uva;Não Há;1;2;3
+239211;Doença;Mancha-das-folhas;Pseudocercospora vitis;Uva;Não Há;2;4;6
+1176701;Inseto;Dano Spodoptera;Dano Spodoptera;Milho;SA;1;2;3
+1176702;Inseto;Dano Percevejo;Dano Percevejo;Milho;Sa;1;2;3
+1176712;Inseto;Percevejo Gaúcho;Leptoglossus zonatus;Milho;Sa;1;2;3
+1176714;Inseto;Daninha Folha Estreita;Daninha Folha Estreita;Milho;Sa;1;2;3
+1176707;Inseto;Percevejo Barriga Verde;D. melacanthus e dichelops furcatus;Milho;Sa;1;2;3
+1176711;Inseto;Percevejo Marrom;Euschistus heros;Milho;Sa;1;2;3
+1176713;Inseto;Percevejo Verde;Nezara viridula;Milho;Sa;1;2;3
+1176715;Inseto;Daninha Folha Larga;Daninha Folha Larga;Milho;Sa;1;2;3
+1176716;Inseto;Doenças Milho;Doenças milho;Milho;Sa;1;2;3

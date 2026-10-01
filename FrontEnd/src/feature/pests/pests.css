@@ -1,0 +1,82 @@
+.pests {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pests__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.pests__summary strong {
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+
+.pests__row--active td {
+  background: rgba(85, 200, 158, 0.04);
+}
+
+.pests__conflict {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-severity-medium);
+  font-size: 9px;
+}
+
+.pests__detail {
+  background: var(--color-surface-elevated);
+}
+
+.pests__detail-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pests__detail-inner p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.pests__detail-inner h4 {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.pests__absent {
+  color: var(--color-severity-unknown);
+}
+
+.pests__variants {
+  background: var(--color-surface);
+}
+
+.pests__variants td .badge {
+  margin-left: 6px;
+}
+
+.pests__levels {
+  color: var(--color-text-secondary) !important;
+}
+
+.pests__describe {
+  color: var(--color-text-muted);
+}
+
+.pests code {
+  padding: 1px 4px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.92em;
+}

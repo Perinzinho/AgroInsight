@@ -1,0 +1,14 @@
+.trends {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trends__gap {
+  color: var(--color-severity-medium);
+}
+
+.trends__hint {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}

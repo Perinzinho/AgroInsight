@@ -1,0 +1,132 @@
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.overview__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.overview__split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* ---------------------------------------------------- fila de prioridades */
+
+.priority {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.priority__item {
+  padding-left: 12px;
+  border-left: 1px solid var(--color-border);
+}
+
+.priority__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.priority__marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-severity-unknown);
+}
+
+.priority__marker--red { background: var(--color-severity-critical); }
+.priority__marker--yellow { background: var(--color-severity-medium); }
+.priority__marker--blue { background: var(--color-severity-low); }
+.priority__marker--green { background: var(--color-severity-ok); }
+
+.priority__title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.priority__meta {
+  margin: 2px 0 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.inline-link {
+  color: var(--color-green);
+  text-decoration: underline;
+}
+
+.inline-link:hover {
+  color: var(--color-green-light);
+}
+
+.overview td .badge {
+  margin-left: 6px;
+}
+
+/* -------------------------------------------------- prova em tres camadas */
+
+.proof {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.proof__step {
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated);
+}
+
+.proof__step--missing {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+.proof__index {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.proof__summary {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.proof__missing {
+  color: var(--color-severity-unknown);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.proof__detail {
+  margin: 5px 0 0;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}

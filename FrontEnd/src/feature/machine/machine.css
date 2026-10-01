@@ -1,0 +1,92 @@
+.machine {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.machine__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.machine__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.machine__row--out td {
+  background: rgba(231, 101, 80, 0.05);
+}
+
+.machine__day,
+.machine__sub {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.machine__absent {
+  color: var(--color-severity-unknown);
+  font-size: 11px;
+}
+
+.machine__basis {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 9px;
+}
+
+.machine td .badge {
+  margin-left: 6px;
+}
+
+.machine__basis + .badge,
+.machine td .badge:first-child {
+  margin-left: 0;
+}
+
+.machine__more {
+  margin: 12px 0 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.machine__buckets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.machine__bucket {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated);
+}
+
+.machine__bucket-label {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.machine__bucket-count {
+  color: var(--color-text-primary);
+  font-family: Georgia, serif;
+  font-size: 15px;
+}
+
+.machine code {
+  padding: 1px 4px;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  font-size: 0.92em;
+}

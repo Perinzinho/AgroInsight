@@ -1,0 +1,28 @@
+.comparator {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.comparator__tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.comparator__picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.comparator__hint {
+  margin: 0 0 16px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.comparator__absent {
+  color: var(--color-severity-unknown);
+  font-size: 10px;
+}

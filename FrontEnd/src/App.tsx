@@ -1,46 +1,18 @@
-import PieChart from './feature/pieChart/pieChart'
-import pestChart from './data/pestChart.json'
-import fertilizationChart from './data/fertilizationChart.json'
-import { toPieChartData as toPestPieChartData } from './feature/DTO/pestChartDTO'
-import type { PestDetectionChartDTO } from './feature/DTO/pestChartDTO'
-import { toPieChartData } from './feature/DTO/fertilizationChartDTO'
-import type { FertilizationChartDTO } from './feature/DTO/fertilizationChartDTO'
+import AgroProvider from './data/AgroProvider'
+import Shell from './feature/shell/shell'
 import './App.css'
 
-function App() {
-  const chartData: PestDetectionChartDTO = pestChart
-  const pestChartData = toPestPieChartData(chartData)
-  const fertilizationData: FertilizationChartDTO = fertilizationChart
-  const fertilizationChartData = toPieChartData(fertilizationData)
-
+/**
+ * Raiz do produto: provider de dados + shell.
+ *
+ * Todo o resto da interface vive dentro do `AgroProvider`, porque as telas leem
+ * o mesmo pacote de dados e os mesmos filtros globais. Nao ha estado de dado
+ * duplicado em componente.
+ */
+export default function App() {
   return (
-    <div style={{ width: '400px' }}>
-      <div>
-
-      </div>
-    </div>
+    <AgroProvider>
+      <Shell />
+    </AgroProvider>
   )
 }
-
-export default App
-
-
-{{/*<PieChart
-          title={chartData.title}
-          subtitle={chartData.subtitle}
-          unit={chartData.unit}
-          items={pestChartData.items}
-          colors={pestChartData.colors}
-        />
-      </div>
-      <div>
-        <PieChart
-          title={fertilizationData.title}
-          subtitle={fertilizationData.subtitle}
-          unit={fertilizationData.unit}
-          centerValue={fertilizationData.weightedAverage}
-          centerLabel="média ponderada"
-          footerText={`Total: ${fertilizationData.totalOperations} operações`}
-          items={fertilizationChartData.items}
-          colors={fertilizationChartData.colors}
-        />*/}}
