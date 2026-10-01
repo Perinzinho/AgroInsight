@@ -132,7 +132,17 @@ export default function TrapDetail({ trapCode }: { trapCode: string | null }) {
             <dl className="trap-detail__meta">
               <div>
                 <dt>trapIds no historico</dt>
-                <dd>{trap.trapIds.join(', ') || '—'}</dd>
+                <dd>
+                  {trap.trapIds.length === 0 ? (
+                    '—'
+                  ) : (
+                    <ul className="trap-detail__ids">
+                      {trap.trapIds.map((id) => (
+                        <li key={id}>{id}</li>
+                      ))}
+                    </ul>
+                  )}
+                </dd>
               </div>
               <div>
                 <dt>Culturas</dt>

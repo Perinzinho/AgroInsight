@@ -1,10 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAgro } from '../../data/agroContext'
 import { climateContext } from '../../data/selectors'
 import { humidityBand } from '../../data/alertRules'
 import { colors } from '../../core/theme/colors'
 import TrendChart from '../trendChart/trendChart'
-import { Badge, Card, EmptyHint, Stat } from '../../core/components/ui'
+import { Badge, Card, EmptyHint, SegmentedControl, Stat } from '../../core/components/ui'
 import { formatDay, formatDayShort, formatNumber } from '../../core/utils/format'
 import './climate.css'
 
@@ -17,6 +17,7 @@ import './climate.css'
  */
 export default function Climate() {
   const { data, filters } = useAgro()
+  const [dayOrder, setDayOrder] = useState<'desc' | 'asc'>('desc')
 
   const view = useMemo(() => {
     if (!data) return null
@@ -26,6 +27,20 @@ export default function Climate() {
       context: climateContext(data.climate.days, filters.from, filters.to),
     }
   }, [data, filters.from, filters.to])
+
+  const tableDays = useMemo(() => {
+    if (!view) return []
+    return view.days
+      .filter((day) =>
+        day.hours > 0 &&
+        (day.precipitation !== 0 ||
+          day.evapotranspiration !== 0 ||
+          [day.temperatureMean, day.temperatureMax, day.humidityMean, day.windMean, day.windGust].some(
+            (value) => value !== null,
+          )),
+      )
+      .sort((a, b) => (dayOrder === 'asc' ? a.day.localeCompare(b.day) : b.day.localeCompare(a.day)))
+  }, [view, dayOrder])
 
   if (!data || !view) return null
 
@@ -122,9 +137,23 @@ export default function Climate() {
         )}
       </Card>
 
-      <Card title="Dia a dia" subtitle="Cada linha e um dia do arquivo climatico, com o que ele traz e o que nao traz">
-        {view.days.length === 0 ? (
-          <EmptyHint>Sem dias climaticos no periodo.</EmptyHint>
+      <Card
+        title="Dia a dia"
+        subtitle="Dias com medicoes disponiveis no periodo"
+        actions={
+          <SegmentedControl<'desc' | 'asc'>
+            label="Ordenar por dia"
+            value={dayOrder}
+            onChange={setDayOrder}
+            options={[
+              { value: 'desc', label: 'Mais recentes' },
+              { value: 'asc', label: 'Mais antigos' },
+            ]}
+          />
+        }
+      >
+        {tableDays.length === 0 ? (
+          <EmptyHint>Sem dias com medicoes no periodo.</EmptyHint>
         ) : (
           <div className="table-wrap">
             <table className="data-table">
@@ -141,7 +170,7 @@ export default function Climate() {
                 </tr>
               </thead>
               <tbody>
-                {view.days.map((day) => (
+                {tableDays.map((day) => (
                   <tr key={day.day}>
                     <td className="is-primary">{formatDay(day.day)}</td>
                     <td className="is-number">{formatNumber(day.precipitation, 1)}</td>
