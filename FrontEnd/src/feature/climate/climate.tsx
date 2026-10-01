@@ -4,7 +4,7 @@ import { climateContext } from '../../data/selectors'
 import { humidityBand } from '../../data/alertRules'
 import { colors } from '../../core/theme/colors'
 import TrendChart from '../trendChart/trendChart'
-import { Badge, Card, EmptyHint, Notice, Stat } from '../../core/components/ui'
+import { Badge, Card, EmptyHint, Stat } from '../../core/components/ui'
 import { formatDay, formatDayShort, formatNumber } from '../../core/utils/format'
 import './climate.css'
 
@@ -31,8 +31,6 @@ export default function Climate() {
 
   const labels = view.days.map((day) => formatDayShort(day.day))
 
-  const station = data.climate.station
-
   return (
     <div className="climate">
       <div className="climate__stats">
@@ -47,12 +45,6 @@ export default function Climate() {
           value={formatNumber(view.context.waterBalance, 1)}
           note={view.context.waterBalance >= 0 ? 'chuva acima da demanda' : 'demanda acima da chuva'}
           tone={view.context.waterBalance >= 0 ? 'green' : 'yellow'}
-        />
-        <Stat
-          label="Evapotranspiracao"
-          value={formatNumber(view.context.totalEvapotranspiration, 1)}
-          note="mm no periodo"
-          tone="neutral"
         />
         <Stat
           label="Temperatura"
@@ -185,20 +177,6 @@ export default function Climate() {
         )}
       </Card>
 
-      <Notice tone="info" title="Como esta base foi tratada">
-        A estacao meteorologica vem de <code>Relatório Horário ... GMT - 03h00.csv</code>. Os dias sao agregados no fuso
-        da propriedade e os valores foram arredondados no conversor; as horas faltantes sao contadas, nunca preenchidas
-        com media.{' '}
-        {station.latitude === null || station.longitude === null ? (
-          'A estacao nao tem coordenada no arquivo, entao ela nao aparece no mapa.'
-        ) : (
-          <>
-            Estacao em {station.latitude.toFixed(4)}, {station.longitude.toFixed(4)}
-            {station.name && <> ({station.name})</>}.
-          </>
-        )}{' '}
-        As faixas de temperatura e umidade do catalogo sao rotulos informativos: nenhuma decisao desta tela depende delas.
-      </Notice>
     </div>
   )
 }

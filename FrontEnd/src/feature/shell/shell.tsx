@@ -7,12 +7,9 @@ import Trends from '../trends/trends'
 import TrapMap from '../trapMap/trapMap'
 import TrapDetail from '../trapDetail/trapDetail'
 import Climate from '../climate/climate'
-import Operations from '../operations/operations'
-import Machine from '../machine/machine'
 import Pests from '../pests/pests'
 import Comparator from '../comparator/comparator'
-import DataQuality from '../dataQuality/dataQuality'
-import { DataState, Notice } from '../../core/components/ui'
+import { DataState } from '../../core/components/ui'
 import { formatDateTime } from '../../core/utils/format'
 import './shell.css'
 
@@ -21,13 +18,9 @@ export type ViewId =
   | 'tendencias'
   | 'mapa'
   | 'armadilha'
-  | 'alertas'
   | 'clima'
-  | 'operacoes'
-  | 'maquinas'
   | 'pragas'
   | 'comparador'
-  | 'qualidade'
 
 interface Route {
   view: ViewId
@@ -52,13 +45,9 @@ const VIEWS: View[] = [
     group: 'Monitoramento',
     render: (route) => <TrapDetail trapCode={route.trapCode} />,
   },
-  { id: 'alertas', label: 'Alertas de praga', group: 'Monitoramento', render: () => <Overview focus="alerts" /> },
   { id: 'clima', label: 'Clima', group: 'Ambiente', render: () => <Climate /> },
-  { id: 'operacoes', label: 'Operacoes', group: 'Ambiente', render: () => <Operations /> },
-  { id: 'maquinas', label: 'Maquinas', group: 'Ambiente', render: () => <Machine /> },
   { id: 'pragas', label: 'Pragas', group: 'Referencia', render: () => <Pests /> },
   { id: 'comparador', label: 'Comparador', group: 'Referencia', render: () => <Comparator /> },
-  { id: 'qualidade', label: 'Qualidade dos dados', group: 'Referencia', render: () => <DataQuality /> },
 ]
 
 const DEFAULT_VIEW: ViewId = 'visao-geral'
@@ -94,7 +83,6 @@ export default function Shell() {
 
   const active = VIEWS.find((view) => view.id === route.view) ?? VIEWS[0]
   const groups = [...new Set(VIEWS.map((view) => view.group))]
-  const criticalWarnings = agro.data?.manifest.warnings.filter((warning) => warning.severity !== 'info').length ?? 0
 
   return (
     <div className="shell">
@@ -137,14 +125,7 @@ export default function Shell() {
           </DataState>
         ) : (
           <>
-            <FiltersBar />
-
-            {criticalWarnings > 0 && (
-              <Notice tone="atencao" title={`${criticalWarnings} aviso(s) sobre a qualidade dos dados nesta base`}>
-                Pressao de pulverizacao, contagens e limites de propriedade precisam de leitura antes de usar os numeros
-                para decidir. <a href="#/qualidade">Ver detalhes</a>.
-              </Notice>
-            )}
+            <FiltersBar hideEntityFilters={active.id === 'clima'} hideCustomDates={active.id === 'armadilha'} />
 
             <DataState
               status={agro.status}

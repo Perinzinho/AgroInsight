@@ -4,9 +4,8 @@ import { useDerived } from '../../data/useDerived'
 import { dailySeries, detectionsByPest, variation } from '../../data/selectors'
 import { colors } from '../../core/theme/colors'
 import TrendChart from '../trendChart/trendChart'
-import { Badge, Card, EmptyHint, Notice } from '../../core/components/ui'
-import { TONE_BY_SEVERITY } from '../../data/useDerived'
-import { formatDay, formatDayShort, formatNumber, formatPercent, trapTypeLabel } from '../../core/utils/format'
+import { Card, EmptyHint, Notice } from '../../core/components/ui'
+import { formatDay, formatDayShort, formatNumber, formatPercent } from '../../core/utils/format'
 import './comparator.css'
 
 type Dimension = 'traps' | 'pests'
@@ -65,8 +64,6 @@ export default function Comparator() {
   }, [derived, dimension, active])
 
   if (!data || !derived || !chart) return null
-
-  const trapByCode = new Map(data.traps.traps.map((trap) => [trap.trapCode, trap]))
 
   return (
     <div className="comparator">
@@ -133,71 +130,6 @@ export default function Comparator() {
           </>
         )}
       </Card>
-
-      {dimension === 'traps' && (
-        <Card title="Armadilhas lado a lado" subtitle="Mesmos dias, mesmas pragas, numeros lado a lado">
-          {active.length === 0 ? (
-            <EmptyHint>Selecione ao menos uma armadilha.</EmptyHint>
-          ) : (
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Medida</th>
-                    {active.map((trapCode) => (
-                      <th key={trapCode} className="is-number">
-                        {trapCode}
-                      </th>
-                    ))}
-                    <th className="is-number">Maior - menor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <CompareRow
-                    label="Caixas"
-                    values={active.map((trapCode) => ranking.find((row) => row.trapCode === trapCode)?.detections ?? null)}
-                  />
-                  <CompareRow
-                    label="Capturas"
-                    values={active.map((trapCode) => ranking.find((row) => row.trapCode === trapCode)?.captures ?? null)}
-                  />
-                  <CompareRow
-                    label="Media por dia"
-                    decimals={1}
-                    values={active.map((trapCode) => ranking.find((row) => row.trapCode === trapCode)?.meanPerDay ?? null)}
-                  />
-                  <CompareRow
-                    label="Praga dominante"
-                    text
-                    values={active.map((trapCode) => ranking.find((row) => row.trapCode === trapCode)?.topPest ?? null)}
-                  />
-                  <tr>
-                    <td>Severidade</td>
-                    {active.map((trapCode) => {
-                      const severity = ranking.find((row) => row.trapCode === trapCode)?.severity ?? 'unknown'
-                      return (
-                        <td key={trapCode} className="is-number">
-                          <Badge tone={TONE_BY_SEVERITY[severity]}>{severity}</Badge>
-                        </td>
-                      )
-                    })}
-                    <td className="is-number">—</td>
-                  </tr>
-                  <tr>
-                    <td>Tipo</td>
-                    {active.map((trapCode) => (
-                      <td key={trapCode} className="is-number">
-                        {trapTypeLabel(trapByCode.get(trapCode)?.type ?? null)}
-                      </td>
-                    ))}
-                    <td className="is-number">—</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      )}
 
       {dimension === 'pests' && (
         <Card title="Pragas lado a lado" subtitle="Contagem por praga e o que o catalogo diz sobre ela">

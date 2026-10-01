@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useAgro } from '../../data/agroContext'
 import { TONE_BY_SEVERITY, useDerived } from '../../data/useDerived'
-import { loadTrapEvents } from '../../data/api'
-import { batteryHealth, dailySeries, detectionsByPest, sumPestDetections } from '../../data/selectors'
-import { Badge, Card, DataState, EmptyHint, Notice, Stat } from '../../core/components/ui'
+import { dailySeries, detectionsByPest, sumPestDetections } from '../../data/selectors'
+import { Card, EmptyHint, Notice, Stat } from '../../core/components/ui'
 import TrendChart from '../trendChart/trendChart'
 import { colors } from '../../core/theme/colors'
 import {
@@ -11,58 +10,16 @@ import {
   formatDay,
   formatDayShort,
   formatNumber,
-  formatTime,
   trapTypeLabel,
 } from '../../core/utils/format'
-import type { TrapEventsPayload } from '../../data/types'
 import './trapDetail.css'
 
 /**
- * Detalhe de uma armadilha: cadastro, serie do periodo e os eventos brutos.
- *
- * Os eventos entram sob demanda porque sao o arquivo mais pesado do pacote e so
- * interessam quando o usuario abre uma armadilha especifica.
+ * Detalhe de uma armadilha: cadastro e serie do periodo.
  */
 export default function TrapDetail({ trapCode }: { trapCode: string | null }) {
   const { data, filters } = useAgro()
   const derived = useDerived()
-
-  const [state, setState] = useState<{
-    file: string | null
-    status: 'idle' | 'loading' | 'ready' | 'error'
-    error: string | null
-    payload: TrapEventsPayload | null
-  }>({ file: null, status: 'idle', error: null, payload: null })
-
-  const entry = useMemo(
-    () => data?.events.traps.find((item) => item.trapCode === trapCode) ?? null,
-    [data, trapCode],
-  )
-
-  useEffect(() => {
-    if (!entry) return
-
-    let cancelled = false
-
-    loadTrapEvents(entry.file)
-      .then((payload) => {
-        if (cancelled) return
-        setState({ file: entry.file, status: 'ready', error: null, payload })
-      })
-      .catch((cause: unknown) => {
-        if (cancelled) return
-        setState({
-          file: entry.file,
-          status: 'error',
-          error: cause instanceof Error ? cause.message : 'Falha ao carregar os eventos.',
-          payload: null,
-        })
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [entry])
 
   const trap = data?.traps.traps.find((item) => item.trapCode === trapCode) ?? null
   const ranking = derived?.ranking.find((row) => row.trapCode === trapCode) ?? null
@@ -88,20 +45,7 @@ export default function TrapDetail({ trapCode }: { trapCode: string | null }) {
     }
   }, [derived, rows])
 
-  const battery = batteryHealth(rows)
   const byPest = detectionsByPest(rows, derived?.pestKeys ?? [])
-
-  const events = entry !== null && state.file === entry.file ? state.payload : null
-  const status =
-    entry === null ? 'idle' : state.file === entry.file ? state.status : ('loading' as const)
-  const error = entry !== null && state.file === entry.file ? state.error : null
-
-  const filteredEvents = useMemo(() => {
-    if (!events) return []
-    return events.events
-      .filter((event) => event.day >= filters.from && event.day <= filters.to)
-      .sort((a, b) => b.at.localeCompare(a.at))
-  }, [events, filters.from, filters.to])
 
   if (!data) return null
 
@@ -120,7 +64,7 @@ export default function TrapDetail({ trapCode }: { trapCode: string | null }) {
         subtitle={
           trap
             ? `${trapTypeLabel(trap.type)} · ${trap.status ?? 'sem status no cadastro'} · instalacao ${formatDay(trap.installationDate ?? '—')}`
-            : 'Use o link em "Armadilhas por volume" ou a navegacao direta por hash.'
+            : 'Selecione uma armadilha para ver o detalhe.'
         }
         actions={
           <label className="trap-detail__picker">
@@ -165,12 +109,6 @@ export default function TrapDetail({ trapCode }: { trapCode: string | null }) {
                 tone="neutral"
               />
               <Stat
-                label="Bateria"
-                value={battery.mean === null ? null : `${battery.mean.toFixed(2)} V`}
-                note={battery.mean === null ? 'traps_events.csv nao traz leitura' : `menor leitura ${battery.lowest?.toFixed(2)} V`}
-                tone={battery.severity === 'ok' ? 'green' : battery.severity === 'unknown' ? 'neutral' : 'yellow'}
-              />
-              <Stat
                 label="Severidade"
                 value={ranking?.severity ?? 'unknown'}
                 note={
@@ -207,15 +145,6 @@ export default function TrapDetail({ trapCode }: { trapCode: string | null }) {
               <div>
                 <dt>Ultima leitura</dt>
                 <dd>{formatDateTime(trap.latest?.at ?? null)}</dd>
-              </div>
-              <div>
-                <dt>pestCount da ultima leitura</dt>
-                <dd>
-                  {trap.latest?.pestCountReported === null || trap.latest === null
-                    ? '—'
-                    : formatNumber(trap.latest.pestCountReported)}{' '}
-                  <span className="trap-detail__hint">apenas auditoria; a contagem oficial e a soma das caixas</span>
-                </dd>
               </div>
               <div>
                 <dt>Fontes</dt>
@@ -273,79 +202,6 @@ export default function TrapDetail({ trapCode }: { trapCode: string | null }) {
           )}
         </Card>
       )}
-
-      {entry && (
-        <Card
-          title="Eventos brutos"
-          subtitle={`${filteredEvents.length} evento(s) no periodo · arquivo ${entry.file}`}
-          tone="quiet"
-        >
-          <DataState status={status === 'idle' ? 'loading' : status} error={error} empty={status === 'ready' && filteredEvents.length === 0}>
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Quando</th>
-                    <th>Tipo</th>
-                    <th className="is-number">Caixas</th>
-                    <th className="is-number">pestCount</th>
-                    <th>Conferencia</th>
-                    <th>Pragas</th>
-                    <th>Imagem</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEvents.map((event) => (
-                    <tr key={`${event.eventId}-${event.at}`}>
-                      <td className="is-primary">
-                        {formatDay(event.day)} {formatTime(event.at)}
-                      </td>
-                      <td>{event.type}</td>
-                      <td className="is-number">{event.detectedTotal || '—'}</td>
-                      <td className="is-number">{event.pestCountReported ?? '—'}</td>
-                      <td>
-                        <Badge
-                          tone={agreementTone(event.countAgreement)}
-                          title={AGREEMENT_LABEL[event.countAgreement]}
-                        >
-                          {AGREEMENT_LABEL[event.countAgreement]}
-                        </Badge>
-                      </td>
-                      <td>
-                        {event.detections.length === 0
-                          ? '—'
-                          : event.detections
-                              .map((detection) => `${detection.pestName} (${detection.detections})`)
-                              .join(', ')}
-                      </td>
-                      <td>
-                        {event.imageUrl ? (
-                          <a className="inline-link" href={event.imageUrl} target="_blank" rel="noreferrer">
-                            abrir
-                          </a>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </DataState>
-        </Card>
-      )}
     </div>
   )
-}
-
-const AGREEMENT_LABEL = {
-  match: 'confere',
-  'detections-higher': 'caixas > pestCount',
-  'reported-higher': 'pestCount > caixas',
-  'only-reported': 'so no pestCount',
-} as const
-
-function agreementTone(agreement: keyof typeof AGREEMENT_LABEL): 'green' | 'yellow' | 'red' {
-  return agreement === 'match' ? 'green' : agreement === 'only-reported' ? 'red' : 'yellow'
 }

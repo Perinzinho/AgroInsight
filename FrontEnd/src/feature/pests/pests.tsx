@@ -168,9 +168,6 @@ function PestRow({
                     <th className="is-number">Alerta</th>
                     <th className="is-number">Controle</th>
                     <th className="is-number">Dano</th>
-                    <th className="is-number">Troca de feromonio (dias)</th>
-                    <th className="is-number">Piso adesivo (dias)</th>
-                    <th>Feromonios</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -183,9 +180,6 @@ function PestRow({
                       <td className="is-number">{formatNumber(variant.thresholds.alert)}</td>
                       <td className="is-number">{formatNumber(variant.thresholds.control)}</td>
                       <td className="is-number">{formatNumber(variant.thresholds.damage)}</td>
-                      <td className="is-number">{formatNumber(variant.intervalDays.pheromone)}</td>
-                      <td className="is-number">{formatNumber(variant.intervalDays.adhesiveFloor)}</td>
-                      <td>{variant.pheromones ?? '—'}</td>
                     </tr>
                   ))}
                 </tbody>

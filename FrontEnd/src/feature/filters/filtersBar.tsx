@@ -12,7 +12,13 @@ const PRESETS = [
   { days: 30, label: '30 dias' },
 ] as const
 
-export default function FiltersBar() {
+export default function FiltersBar({
+  hideEntityFilters = false,
+  hideCustomDates = false,
+}: {
+  hideEntityFilters?: boolean
+  hideCustomDates?: boolean
+}) {
   const { data, filters, availableRange, setPeriod, toggleTrap, togglePest, resetFilters, isFiltered, status } = useAgro()
 
   if (!data) return null
@@ -73,7 +79,8 @@ export default function FiltersBar() {
           </button>
         </div>
 
-        <div className="filters-bar__dates">
+        {!hideCustomDates && (
+          <div className="filters-bar__dates">
           <label>
             <span>De</span>
             <input
@@ -94,7 +101,8 @@ export default function FiltersBar() {
               onChange={(event) => setPeriod(filters.from, event.target.value)}
             />
           </label>
-        </div>
+          </div>
+        )}
 
         <p className="filters-bar__summary">
           {formatRange(filters.from, filters.to)} <span>· {selectedDays} dia(s)</span>
@@ -102,7 +110,8 @@ export default function FiltersBar() {
         </p>
       </div>
 
-      <div className="filters-bar__group filters-bar__group--selects">
+      {!hideEntityFilters && (
+        <div className="filters-bar__group filters-bar__group--selects">
         <MultiSelect
           label="Armadilha"
           options={trapOptions}
@@ -125,9 +134,10 @@ export default function FiltersBar() {
           emptyLabel={pestOptions.length === 0 ? 'Nenhuma no periodo' : `Todas (${pestOptions.length})`}
           searchPlaceholder="Buscar praga..."
         />
-      </div>
+        </div>
+      )}
 
-      {isFiltered && (
+      {isFiltered && !hideEntityFilters && (
         <button type="button" className="chip chip--clear" onClick={resetFilters}>
           Limpar filtros
         </button>

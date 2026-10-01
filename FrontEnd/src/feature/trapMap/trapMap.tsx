@@ -1,13 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Circle, CircleMarker, MapContainer, Polyline, Popup, TileLayer } from 'react-leaflet'
+import { Circle, CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useAgro } from '../../data/agroContext'
 import { TONE_BY_SEVERITY, useDerived } from '../../data/useDerived'
-import { loadOperationDetail } from '../../data/api'
 import { colors } from '../../core/theme/colors'
-import { Badge, Card, EmptyHint, Notice, SegmentedControl } from '../../core/components/ui'
+import { Card, Notice, SegmentedControl } from '../../core/components/ui'
 import { formatDateTime, formatDistance, formatNumber, trapTypeLabel } from '../../core/utils/format'
-import type { MachineOperationSummary, OperationDetailPayload } from '../../data/types'
 import './trapMap.css'
 
 type LayerId = 'armadilhas' | 'alertas' | 'referencia' | 'aerea'
@@ -20,12 +18,10 @@ const LAYERS: { value: LayerId; label: string }[] = [
 ]
 
 /**
- * Mapa das armadilhas, dos alertas de maquina e das trajetorias de aplicacao.
+ * Mapa das armadilhas e dos alertas de maquina.
  *
  * O que o pacote entrega de georreferenciado:
  * - `traps.json` tem latitude/longitude por armadilha;
- * - `operations/*.json` tem o indice; a geometria fica nos arquivos por ordem
- *   de servico, carregados aqui sob demanda;
  * - `machine-alerts.json` tem a posicao de cada alerta.
  *
  * O que o pacote NAO traz: o limite da propriedade. Nao ha geojson em
@@ -38,47 +34,16 @@ export default function TrapMap() {
   const { data } = useAgro()
   const derived = useDerived()
   const [layer, setLayer] = useState<LayerId>('armadilhas')
-  const [detail, setDetail] = useState<OperationDetailPayload | null>(null)
-  const [loadingFile, setLoadingFile] = useState<string | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-
   const severityByTrap = useMemo(
     () => new Map((derived?.ranking ?? []).map((row) => [row.trapCode, row.severity])),
     [derived],
   )
-
-  const operations = useMemo(() => {
-    if (!data) return []
-    return [...data.fertilization.operations, ...data.spray.operations]
-  }, [data])
-
-  const loadTrack = async (operation: MachineOperationSummary) => {
-    if (!data) return
-    if (detail?.serviceOrder === operation.serviceOrder) {
-      setDetail(null)
-      return
-    }
-    setLoadingFile(operation.file)
-    setLoadError(null)
-    try {
-      setDetail(await loadOperationDetail(operation.file))
-    } catch (error) {
-      setDetail(null)
-      setLoadError(error instanceof Error ? error.message : 'Falha ao carregar a trajetoria.')
-    } finally {
-      setLoadingFile(null)
-    }
-  }
 
   if (!data) return null
 
   const [referenceLon, referenceLat] = data.manifest.farmReference
   const center: [number, number] = [referenceLat, referenceLon]
   const radius = data.manifest.farmReferenceRadiusMeters
-
-  const trapsWithoutCoordinates = data.traps.traps.filter(
-    (trap) => trap.latitude === null || trap.longitude === null,
-  )
 
   return (
     <div className="trap-map">
@@ -162,17 +127,6 @@ export default function TrapMap() {
               </CircleMarker>
             ))}
 
-          {detail?.paths.map((path, index) => (
-            <Polyline
-              key={`${path.at}-${index}`}
-              positions={path.coordinates.map(([lon, lat]) => [lat, lon] as [number, number])}
-              pathOptions={{
-                color: detail.kind === 'fertilization' ? colors.green.primary : colors.blue.primary,
-                weight: 3,
-                opacity: 0.85,
-              }}
-            />
-          ))}
         </MapContainer>
 
         {layer === 'aerea' && (
@@ -191,133 +145,12 @@ export default function TrapMap() {
           </Notice>
         )}
 
-        {detail && (
-          <Notice tone="info" title={`Trajetoria carregada: OS ${detail.serviceOrder}`}>
-            {detail.paths.length} trecho(s) · {formatDetailDays(detail)}. A geometria veio de{' '}
-            <code>{detail.source}</code>.
-          </Notice>
-        )}
-        {loadError && (
-          <Notice tone="critico" title="Nao foi possivel carregar a trajetoria">
-            {loadError}
-          </Notice>
-        )}
-
         <p className="trap-map__legend">
           <span className="trap-map__key trap-map__key--ok">armadilha com serie</span>
           <span className="trap-map__key trap-map__key--unknown">armadilha sem limiar</span>
           <span className="trap-map__key trap-map__key--reference">referencia do manifesto</span>
         </p>
       </Card>
-
-      <Card
-        title="Operacoes no mapa"
-        subtitle="A geometria fica nos arquivos por ordem de servico e e carregada ao clicar"
-      >
-        {operations.length === 0 ? (
-          <EmptyHint>Nenhuma ordem de servico no pacote.</EmptyHint>
-        ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>OS</th>
-                  <th>Operacao</th>
-                  <th>Maquina</th>
-                  <th className="is-number">Trechos</th>
-                  <th className="is-number">Area relatada</th>
-                  <th className="is-number">Longe da referencia</th>
-                  <th>Trajetoria</th>
-                </tr>
-              </thead>
-              <tbody>
-                {operations.map((operation) => (
-                  <tr key={operation.file}>
-                    <td className="is-primary">{operation.serviceOrder}</td>
-                    <td>{operation.operation}</td>
-                    <td>{operation.machine ?? '—'}</td>
-                    <td className="is-number">{formatNumber(operation.segments)}</td>
-                    <td className="is-number">{formatNumber(operation.reportedAreaHa, 1)} ha</td>
-                    <td className="is-number">
-                      {formatNumber(operation.farFromFarmSegments)}
-                      {operation.maxDistanceMeters !== null && (
-                        <span className="trap-map__distance"> ate {formatDistance(operation.maxDistanceMeters)}</span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="link-button"
-                        disabled={loadingFile === operation.file}
-                        onClick={() => void loadTrack(operation)}
-                      >
-                        {loadingFile === operation.file
-                          ? 'Carregando...'
-                          : detail?.serviceOrder === operation.serviceOrder
-                            ? 'Ocultar'
-                            : 'Desenhar'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-
-      <Card title="Inventario de armadilhas" subtitle={`${data.traps.traps.length} armadilhas no cadastro`}>
-        {derived === null || derived.traps.length === 0 ? (
-          <EmptyHint>Nenhuma armadilha cadastrada.</EmptyHint>
-        ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Armadilha</th>
-                  <th>Tipo</th>
-                  <th>Cultura</th>
-                  <th>Severidade</th>
-                  <th className="is-number">Caixas</th>
-                  <th className="is-number">Capturas</th>
-                  <th className="is-number">Dias</th>
-                </tr>
-              </thead>
-              <tbody>
-                {derived.traps.map((entry) => (
-                  <tr key={entry.trap.trapCode}>
-                    <td className="is-primary">
-                      <a className="inline-link" href={`#/armadilha/${entry.trap.trapCode}`}>
-                        {entry.trap.trapCode}
-                      </a>
-                    </td>
-                    <td>{trapTypeLabel(entry.trap.type)}</td>
-                    <td>{entry.trap.cultures.join(', ') || '—'}</td>
-                    <td>
-                      <Badge tone={TONE_BY_SEVERITY[entry.severity]}>{entry.severity}</Badge>
-                    </td>
-                    <td className="is-number">{formatNumber(entry.detections)}</td>
-                    <td className="is-number">{formatNumber(entry.captures)}</td>
-                    <td className="is-number">{formatNumber(entry.days)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {trapsWithoutCoordinates.length > 0 && (
-          <Notice tone="info" title="Sem coordenada no cadastro">
-            {trapsWithoutCoordinates.map((trap) => trap.trapCode).join(', ')} nao entram no mapa:{' '}
-            <code>traps_list.csv</code> nao tem latitude/longitude valida para elas. Elas continuam no filtro e na serie.
-          </Notice>
-        )}
-      </Card>
     </div>
   )
-}
-
-/** Mostra quantos dias a trajetoria cobre, sem repetir o intervalo inteiro. */
-function formatDetailDays(detail: OperationDetailPayload): string {
-  const days = new Set(detail.paths.map((path) => path.day))
-  return `${days.size} dia(s) de trabalho`
 }
