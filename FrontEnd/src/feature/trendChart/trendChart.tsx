@@ -29,7 +29,7 @@ Chart.register(
 
 Chart.defaults.color = colors.text.secondary
 Chart.defaults.borderColor = colors.border.default
-Chart.defaults.font.family = "'Trebuchet MS', 'Segoe UI', sans-serif"
+Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif"
 
 export interface SeriesSpec {
   label: string

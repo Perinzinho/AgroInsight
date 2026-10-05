@@ -2,8 +2,8 @@
  * Paleta oficial do AgroInsight.
  *
  * Use estes tokens em vez de declarar cores diretamente nos componentes.
- * A paleta foi baseada na referência: interface escura, verde como cor
- * principal, amarelo para alertas/destaques e azul para dados e informações.
+ * Paleta editorial de campo: superfícies claras, verde profundo na marca,
+ * ocre para destaques e azul para dados e informações.
  *
  * `severity` cobre as cores de estado usada por KPIs, alertas e legendas de
  * regra. `nullSeverityColor` e a cor de "sem informacao": e aplicada quando o
@@ -12,73 +12,73 @@
  */
 export const colors = {
   background: {
-    page: '#020B07',
-    surface: '#06150F',
-    surfaceElevated: '#0A2118',
+    page: '#F6F4ED',
+    surface: '#FFFFFF',
+    surfaceElevated: '#F0EFE7',
     /** Sobreposicao para modais e paineis flutuantes. */
-    overlay: 'rgba(2, 11, 7, 0.82)',
+    overlay: 'rgba(28, 50, 40, 0.78)',
   },
   text: {
-    primary: '#F1F7F3',
-    secondary: '#A7B9B0',
-    muted: '#70837A',
+    primary: '#1E352B',
+    secondary: '#5E6E64',
+    muted: '#819085',
   },
   border: {
-    default: '#17382B',
-    strong: '#2A5544',
+    default: '#DEDCD0',
+    strong: '#C8CABD',
   },
   green: {
-    primary: '#55C89E',
-    light: '#8BE0BF',
-    dark: '#257A5B',
+    primary: '#2A6B4B',
+    light: '#4F9A70',
+    dark: '#194933',
   },
   yellow: {
-    primary: '#E7CB58',
-    light: '#F5E59A',
-    dark: '#A88924',
+    primary: '#BC914D',
+    light: '#E4CC93',
+    dark: '#8E6B31',
   },
   blue: {
-    primary: '#58BAD0',
-    light: '#91DAE8',
-    dark: '#237E98',
+    primary: '#4C8190',
+    light: '#8AB3BB',
+    dark: '#315E6D',
   },
   /** Dourado da marca, usado em selecao e destaque de navegacao. */
   gold: {
-    primary: '#D5AF40',
-    light: '#EAD072',
+    primary: '#AF793B',
+    light: '#D5AD65',
   },
   feedback: {
-    danger: '#E76550',
-    warning: '#E7CB58',
-    success: '#55C89E',
-    info: '#58BAD0',
+    danger: '#BD5C43',
+    warning: '#BC914D',
+    success: '#2A6B4B',
+    info: '#4C8190',
   },
   severity: {
-    critical: '#E76550',
-    high: '#E9A05A',
-    medium: '#E7CB58',
-    low: '#58BAD0',
-    ok: '#55C89E',
+    critical: '#BD5C43',
+    high: '#C47D43',
+    medium: '#BC914D',
+    low: '#4C8190',
+    ok: '#2A6B4B',
     /** Ausencia de dado. Nunca usar para representar um valor. */
-    unknown: '#5A6B63',
+    unknown: '#89978C',
   },
   /** Paleta categorica para graficos, da praga mais frequente para a menos. */
   chart: [
-    '#55C89E',
-    '#58BAD0',
-    '#E7CB58',
-    '#E76550',
-    '#8BE0BF',
-    '#91DAE8',
-    '#A88924',
-    '#237E98',
+    '#2A6B4B',
+    '#4C8190',
+    '#BC914D',
+    '#BD5C43',
+    '#4F9A70',
+    '#8AB3BB',
+    '#8E6B31',
+    '#315E6D',
   ],
   /** Preenchimentos translucidos para sobreposicoes de mapa e faixas. */
   overlay: {
-    green: 'rgba(85, 200, 158, 0.16)',
-    blue: 'rgba(88, 186, 208, 0.16)',
-    yellow: 'rgba(231, 203, 88, 0.16)',
-    red: 'rgba(231, 101, 80, 0.16)',
+    green: 'rgba(42, 107, 75, 0.10)',
+    blue: 'rgba(76, 129, 144, 0.10)',
+    yellow: 'rgba(188, 145, 77, 0.12)',
+    red: 'rgba(189, 92, 67, 0.10)',
   },
 } as const
 

@@ -269,3 +269,15 @@
   background: rgba(213, 175, 64, 0.12);
   color: var(--color-gold);
 }
+
+/* Editorial surface system */
+.card{border-radius:2px;box-shadow:0 8px 25px rgba(32,55,40,.035)}
+.card__head{padding:22px 25px 18px}.card__title{font-family:Georgia,serif;font-size:21px;font-weight:400;letter-spacing:-.5px}.card__subtitle{margin-top:6px;font-size:12px}.card__body{padding:23px 25px}
+.stat{position:relative;min-height:158px;gap:0;overflow:hidden;padding:21px 22px 20px;border:1px solid var(--color-border);border-top:3px solid var(--color-severity-unknown);background:var(--color-surface);box-shadow:0 8px 25px rgba(32,55,40,.035)}
+.stat:after{position:absolute;right:-34px;bottom:-45px;width:105px;height:105px;border:1px solid currentColor;border-radius:50%;opacity:.07;content:''}.stat--green{border-top-color:var(--color-severity-ok)}.stat--yellow{border-top-color:var(--color-severity-medium)}.stat--blue{border-top-color:var(--color-severity-low)}.stat--red{border-top-color:var(--color-severity-critical)}.stat--neutral{border-top-color:var(--color-severity-unknown)}
+.stat__label{min-height:28px;color:var(--color-text-secondary);font-size:10px;font-weight:800;letter-spacing:1.15px}.stat__value{margin:10px 0 12px;color:var(--color-text-primary);font-family:Georgia,serif;font-size:39px;letter-spacing:-1.7px;line-height:1.05}.stat__note{margin-top:auto;color:var(--color-text-muted);font-size:11px;line-height:1.5}
+.badge{border-radius:3px;background:var(--color-surface);font-size:10px}.notice{padding:15px 18px;border-left-width:3px}.notice__title{font-size:12px}.notice__text{font-size:12px}.empty-hint{font-size:12px}
+.data-table{font-size:12px}.data-table th{padding:12px 11px;background:#f4f3ec;color:#65786a;font-size:10px;font-weight:800;letter-spacing:1px}.data-table td{padding:12px 11px;line-height:1.45}.data-table tbody tr:hover td{background:#f6f7f0}
+.link-button{color:var(--color-green);font-weight:650;text-decoration:none}.link-button:hover{text-decoration:underline}
+.segmented{gap:3px;padding:3px;border:1px solid var(--color-border);border-radius:4px;background:var(--color-surface-elevated)}.segmented__item{padding:7px 11px;border:0;border-radius:3px;font-size:11px}.segmented__item.is-active{background:#fff;color:var(--color-green-dark);box-shadow:0 1px 4px rgba(30,55,43,.12)}
+@media(max-width:700px){.card__head{flex-wrap:wrap;padding:19px}.card__body{padding:18px}.stat{min-height:140px}.stat__value{font-size:34px}}

@@ -1,4 +1,5 @@
 import { useAgro } from '../../data/agroContext'
+import { formatDay } from '../../core/utils/format'
 import './filtersBar.css'
 
 const PRESETS = [
@@ -19,6 +20,7 @@ export default function FiltersBar() {
 
   return (
     <div className="filters-bar">
+      <div className="filters-bar__intro"><span>JANELA DE ANÁLISE</span><strong>{formatDay(filters.from)} — {formatDay(filters.to)}</strong></div>
       <div className="filters-bar__presets" role="group" aria-label="Atalhos de periodo">
         {PRESETS.map((preset) => (
           <button

@@ -8,20 +8,16 @@
   width: 100%;
   height: 460px;
   border: 1px solid var(--color-border);
-  background: var(--color-surface-elevated);
+  background: #e9eee4;
 }
 
-/*
- * Leaflet traz o fundo claro por padrao. O mapa tem que ficar na mesma paleta
- * escura do resto do produto, senao o cartao mais claro quebra a hierarquia.
- */
 .leaflet-tile-pane {
-  filter: brightness(0.72) saturate(0.72) hue-rotate(100deg) invert(0.92) contrast(0.95);
+  filter: saturate(.62) sepia(.12) contrast(.94);
 }
 
 .leaflet-container {
-  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
-  background: var(--color-surface-elevated);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #e9eee4;
 }
 
 .leaflet-popup-content-wrapper,

@@ -1,15 +1,15 @@
 {
-  "name": "meu-projeto",
+  "name": "agroinsight-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "npm run data:build && tsc -b && vite build",
+    "dev": "vite --configLoader runner",
+    "build": "npm run data:build && tsc -b && vite build --configLoader runner",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "preview": "vite preview --configLoader runner",
+    "test": "vitest run --configLoader runner",
+    "test:watch": "vitest --configLoader runner",
     "data:build": "node scripts/convertCsvToJson.mjs",
     "data:check": "node scripts/convertCsvToJson.mjs --check"
   },

@@ -27,6 +27,10 @@ export default function Overview() {
   return (
     <div className="overview">
       <section aria-label="Indicadores">
+        <div className="overview__section-heading">
+          <div><span className="overview__section-kicker">01 / PANORAMA</span><h2>O campo em números</h2></div>
+          <p>Indicadores calculados para o período selecionado.</p>
+        </div>
         <div className="overview__stats">
           {kpis.map((kpi) => (
             <Stat
@@ -49,6 +53,17 @@ export default function Overview() {
             tem serie, entao os indicadores aparecem sem variacao.
           </Notice>
         )}
+      </section>
+      <section className="overview__explore" aria-label="Explorar análises">
+        <div className="overview__section-heading">
+          <div><span className="overview__section-kicker">02 / EXPLORAR</span><h2>Vá além do panorama</h2></div>
+          <p>Escolha uma perspectiva para aprofundar a análise.</p>
+        </div>
+        <div className="overview__explore-grid">
+          <a href="#/tendencias" className="overview__explore-card"><span>01 / EVOLUÇÃO</span><strong>Tendências</strong><p>Como as detecções mudaram ao longo dos dias.</p><b aria-hidden="true">↗</b></a>
+          <a href="#/mapa" className="overview__explore-card"><span>02 / TERRITÓRIO</span><strong>Mapa</strong><p>Onde estão as armadilhas e os alertas do campo.</p><b aria-hidden="true">↗</b></a>
+          <a href="#/clima" className="overview__explore-card"><span>03 / CONTEXTO</span><strong>Clima</strong><p>As condições ambientais por trás dos números.</p><b aria-hidden="true">↗</b></a>
+        </div>
       </section>
     </div>
   )
