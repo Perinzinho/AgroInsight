@@ -68,14 +68,15 @@
   content: '';
 }
 
-.trap-map__key--ok::before { background: var(--color-severity-ok); }
-.trap-map__key--unknown::before { background: var(--color-severity-unknown); }
-
-.trap-map__key--reference::before {
-  border: 1px dashed var(--color-gold);
-  border-radius: 0;
-  background: none;
+.trap-map__key--trap::before {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--color-text-secondary);
+  background: transparent;
 }
+
+.trap-map__key--alert::before { background: var(--color-severity-medium); }
+.trap-map__key--outside::before { background: var(--color-severity-critical); }
 
 .trap-map__distance {
   display: block;
