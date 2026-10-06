@@ -6,7 +6,7 @@
 
 .machine__stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
   gap: 10px;
 }
 
@@ -24,19 +24,19 @@
 .machine__sub {
   display: block;
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .machine__absent {
   color: var(--color-severity-unknown);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .machine__basis {
   display: block;
   margin-top: 3px;
   color: var(--color-text-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .machine td .badge {
@@ -51,12 +51,12 @@
 .machine__more {
   margin: 12px 0 0;
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .machine__buckets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
   gap: 8px;
 }
 
@@ -73,14 +73,14 @@
 .machine__bucket-label {
   overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .machine__bucket-count {
   color: var(--color-text-primary);
-  font-family: Georgia, serif;
+  font-family: inherit;
   font-size: 15px;
 }
 

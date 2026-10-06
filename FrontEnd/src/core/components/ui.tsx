@@ -111,8 +111,8 @@ export function DataState({
 }) {
   if (status === 'error') {
     return (
-      <Notice tone="critico" title="Nao foi possivel carregar os dados">
-        {error ?? 'Erro desconhecido.'} Verifique se `npm run data:build` foi executado.
+      <Notice tone="critico" title="Não foi possível carregar os dados">
+        {error ?? 'A base está indisponível no momento.'}
         {onRetry && (
           <>
             {' '}
@@ -136,7 +136,7 @@ export function DataState({
 
   if (empty) {
     return (
-      <Notice tone="info" title="Sem dado no periodo selecionado">
+      <Notice tone="info" title="Sem dados no período selecionado">
         {emptyText ?? 'Nenhum registro no intervalo e nos filtros atuais.'}
       </Notice>
     )

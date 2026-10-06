@@ -1,46 +1,11 @@
-.filters-bar {
-  display: flex;
-  align-items: center;
-  justify-content:space-between;
-  gap:20px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--color-border);
-  background:var(--color-surface);
-  border:1px solid var(--color-border);
-}
-.filters-bar__intro{display:flex;align-items:baseline;gap:15px}.filters-bar__intro span{color:var(--color-gold);font-size:9px;font-weight:800;letter-spacing:1.2px;white-space:nowrap}.filters-bar__intro strong{font-family:Georgia,serif;font-size:18px;font-weight:400;color:var(--color-text-primary);white-space:nowrap}
-
-.filters-bar__presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.chip {
-  padding: 8px 14px;
-  border: 1px solid var(--color-border);
-  border-radius:3px;
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-size: 11px;
-  font-weight:650;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.chip:hover:not(:disabled) {
-  border-color: var(--color-border-strong);
-  color: var(--color-text-primary);
-}
-
-.chip:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.chip.is-active {
-  border-color: var(--color-green);
-  background: var(--color-green);
-  color: #fff;
-}
-@media(max-width:600px){.filters-bar{flex-wrap:wrap;padding:14px}.filters-bar__intro{width:100%;justify-content:space-between}}
+.filters-bar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 17px 20px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); }
+.filters-bar__intro { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; }
+.filters-bar__intro span { color: var(--color-text-secondary); font-size: 14px; }
+.filters-bar__intro strong { color: var(--color-text-primary); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.filters-bar__presets { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { min-height: 38px; padding: 8px 14px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text-secondary); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.chip:hover:not(:disabled) { border-color: var(--color-green); color: var(--color-green); }
+.chip:disabled { opacity: .45; cursor: not-allowed; }
+.chip.is-active { border-color: var(--color-green); background: var(--color-green); color: white; }
+@media (max-width: 1000px) { .filters-bar { align-items: flex-start; flex-wrap: wrap; gap: 14px; } }
+@media (max-width: 440px) { .filters-bar { padding: 16px; } .filters-bar__intro { align-items: flex-start; flex-direction: column; } }

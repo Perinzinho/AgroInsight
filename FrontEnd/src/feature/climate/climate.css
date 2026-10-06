@@ -6,13 +6,13 @@
 
 .climate__stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 10px;
 }
 
 .climate__missing {
   color: var(--color-severity-medium);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .climate td .badge {

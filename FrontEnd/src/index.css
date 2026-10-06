@@ -7,15 +7,15 @@
  * duas versoes.
  */
 :root {
-  --color-page: #f6f4ed;
+  --color-page: #f4f6f3;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f0efe7;
+  --color-surface-elevated: #edf1ec;
   --color-overlay: rgba(28, 50, 40, 0.78);
   --color-text-primary: #1e352b;
   --color-text-secondary: #5e6e64;
-  --color-text-muted: #819085;
-  --color-border: #dedcd0;
-  --color-border-strong: #c8cabd;
+  --color-text-muted: #647369;
+  --color-border: #dce3da;
+  --color-border-strong: #c5d0c3;
   --color-green: #2a6b4b;
   --color-green-light: #4f9a70;
   --color-green-dark: #194933;
@@ -37,6 +37,8 @@
   --color-overlay-red: rgba(189, 92, 67, 0.10);
 
   font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--color-text-primary);
   background: var(--color-page);
   font-synthesis: none;
@@ -53,10 +55,13 @@ body {
   min-width: 320px;
 }
 
-button,
+button, input, select, textarea,
 a {
   font: inherit;
 }
+
+button, input, select, textarea { accent-color: var(--color-green); }
+svg { vertical-align: middle; }
 
 a {
   color: inherit;

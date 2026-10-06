@@ -12,20 +12,20 @@
  */
 export const colors = {
   background: {
-    page: '#F6F4ED',
+    page: '#F4F6F3',
     surface: '#FFFFFF',
-    surfaceElevated: '#F0EFE7',
+    surfaceElevated: '#EDF1EC',
     /** Sobreposicao para modais e paineis flutuantes. */
     overlay: 'rgba(28, 50, 40, 0.78)',
   },
   text: {
     primary: '#1E352B',
     secondary: '#5E6E64',
-    muted: '#819085',
+    muted: '#647369',
   },
   border: {
-    default: '#DEDCD0',
-    strong: '#C8CABD',
+    default: '#DCE3DA',
+    strong: '#C5D0C3',
   },
   green: {
     primary: '#2A6B4B',

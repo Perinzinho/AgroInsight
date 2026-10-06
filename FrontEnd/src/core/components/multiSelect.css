@@ -25,7 +25,7 @@
 
 .multi-select__label {
   color: var(--color-text-muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -57,7 +57,8 @@
   padding: 8px;
   border: 1px solid var(--color-border-strong);
   background: var(--color-surface-elevated);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 8px 24px rgba(30, 53, 43, 0.14);
+  border-radius: 5px;
 }
 
 .multi-select__search {
@@ -83,7 +84,7 @@
   background: none;
   color: var(--color-green);
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -120,12 +121,12 @@
 
 .multi-select__option-hint {
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
 .multi-select__empty {
   padding: 8px 4px;
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: 12px;
 }

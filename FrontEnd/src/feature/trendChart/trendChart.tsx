@@ -37,6 +37,10 @@ export interface SeriesSpec {
   color: string
   /** `true` desenha uma area sob a linha. */
   fill?: boolean
+  /** Mantem pontos isolados visiveis, mesmo em intervalos longos. */
+  pointRadius?: number
+  tension?: number
+  dash?: number[]
 }
 
 export interface BarsSpec {
@@ -63,12 +67,18 @@ export default function TrendChart({
   bars,
   height = 240,
   yLabel,
+  showLegend = true,
+  interactionMode = 'index',
+  ariaLabel = 'Gráfico de série temporal',
 }: {
   labels: string[]
   series: SeriesSpec[]
   bars?: BarsSpec
   height?: number
   yLabel?: string
+  showLegend?: boolean
+  interactionMode?: 'index' | 'nearest'
+  ariaLabel?: string
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const chartRef = useRef<Chart | null>(null)
@@ -90,8 +100,9 @@ export default function TrendChart({
             borderColor: entry.color,
             backgroundColor: entry.fill ? `${entry.color}22` : entry.color,
             fill: entry.fill ?? false,
-            tension: 0.28,
-            pointRadius: entry.values.length > 40 ? 0 : 2.5,
+            tension: entry.tension ?? 0.28,
+            borderDash: entry.dash ?? [],
+            pointRadius: entry.pointRadius ?? (entry.values.length > 40 ? 0 : 2.5),
             pointHoverRadius: 5,
             borderWidth: 2,
             spanGaps: false,
@@ -117,10 +128,10 @@ export default function TrendChart({
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
+        interaction: { mode: interactionMode, intersect: false },
         plugins: {
           legend: {
-            display: series.length + (bars ? 1 : 0) > 1,
+            display: showLegend && series.length + (bars ? 1 : 0) > 1,
             position: 'bottom',
             labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 }, padding: 12 },
           },
@@ -154,11 +165,11 @@ export default function TrendChart({
       chartRef.current?.destroy()
       chartRef.current = null
     }
-  }, [labels, series, bars, yLabel])
+  }, [labels, series, bars, yLabel, showLegend, interactionMode])
 
   return (
-    <div style={{ position: 'relative', height }}>
-      <canvas ref={canvasRef} role="img" aria-label="Grafico de serie temporal" />
+    <div style={{ position: 'relative', height, minWidth: 0, width: '100%' }}>
+      <canvas ref={canvasRef} role="img" aria-label={ariaLabel} />
     </div>
   )
 }

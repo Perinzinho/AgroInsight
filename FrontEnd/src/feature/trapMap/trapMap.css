@@ -25,7 +25,7 @@
   border: 1px solid var(--color-border-strong);
   background: var(--color-surface-elevated);
   color: var(--color-text-primary);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
 }
 
@@ -36,7 +36,7 @@
 .leaflet-control-attribution {
   background: var(--color-overlay) !important;
   color: var(--color-text-muted) !important;
-  font-size: 9px !important;
+  font-size: 12px !important;
 }
 
 .leaflet-control-attribution a {
@@ -55,7 +55,7 @@
   gap: 8px 18px;
   margin: 12px 0 0;
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .trap-map__key::before {
@@ -80,7 +80,7 @@
 .trap-map__distance {
   display: block;
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 @media (max-width: 700px) {

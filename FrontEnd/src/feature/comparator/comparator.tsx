@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useAgro } from '../../data/agroContext'
 import { useDerived } from '../../data/useDerived'
-import { dailySeries, detectionsByPest, variation } from '../../data/selectors'
-import { colors } from '../../core/theme/colors'
+import { detectionsByPest, variation } from '../../data/selectors'
 import TrendChart from '../trendChart/trendChart'
 import { Card, EmptyHint, Notice } from '../../core/components/ui'
-import { formatDay, formatDayShort, formatNumber, formatPercent } from '../../core/utils/format'
+import { formatDay, formatNumber, formatPercent } from '../../core/utils/format'
+import { buildComparisonChart } from './comparisonChart'
 import './comparator.css'
 
 type Dimension = 'traps' | 'pests'
@@ -21,7 +21,6 @@ export default function Comparator() {
   const { data, filters } = useAgro()
   const derived = useDerived()
   const [dimension, setDimension] = useState<Dimension>('traps')
-  const [picked, setPicked] = useState<string[]>([])
 
   const ranking = useMemo(() => derived?.ranking ?? [], [derived])
   const byPest = useMemo(() => derived?.byPest ?? [], [derived])
@@ -31,37 +30,19 @@ export default function Comparator() {
     return byPest.map((row) => ({ value: row.pestKey, label: row.pestName }))
   }, [dimension, ranking, byPest])
 
-  const selected = picked.filter((value) => options.some((option) => option.value === value))
-  const active = selected.length > 0 ? selected : options.slice(0, 3).map((option) => option.value)
+  const active = useMemo(() => options.map((option) => option.value), [options])
 
   const chart = useMemo(() => {
-    if (!derived) return null
-    return {
-      labels: derived.days.map((day) => formatDayShort(day)),
-      series:
-        dimension === 'traps'
-          ? active.map((trapCode, index) => {
-              const points = dailySeries(
-                derived.rows.filter((row) => row.trapCode === trapCode),
-                derived.days,
-                derived.pestKeys,
-              )
-              return {
-                label: trapCode,
-                values: points.map((point) => (point.captures === 0 && point.detections === 0 ? null : point.detections)),
-                color: colors.chart[index % colors.chart.length],
-              }
-            })
-          : active.map((pestKey, index) => {
-              const points = dailySeries(derived.rows, derived.days, [pestKey])
-              return {
-                label: pestKey,
-                values: points.map((point) => (point.captures === 0 && point.detections === 0 ? null : point.detections)),
-                color: colors.chart[index % colors.chart.length],
-              }
-            }),
-    }
-  }, [derived, dimension, active])
+    if (!data || !derived) return null
+    return buildComparisonChart({
+      rows: derived.rows,
+      days: derived.days,
+      coverage: data.manifest.coverage.events.range,
+      dimension,
+      options,
+      pestKeys: derived.pestKeys,
+    })
+  }, [data, derived, dimension, options])
 
   if (!data || !derived || !chart) return null
 
@@ -75,20 +56,16 @@ export default function Comparator() {
             <button
               type="button"
               className={`chip ${dimension === 'traps' ? 'is-active' : ''}`}
-              onClick={() => {
-                setDimension('traps')
-                setPicked([])
-              }}
+              aria-pressed={dimension === 'traps'}
+              onClick={() => setDimension('traps')}
             >
               Por armadilha
             </button>
             <button
               type="button"
               className={`chip ${dimension === 'pests' ? 'is-active' : ''}`}
-              onClick={() => {
-                setDimension('pests')
-                setPicked([])
-              }}
+              aria-pressed={dimension === 'pests'}
+              onClick={() => setDimension('pests')}
             >
               Por praga
             </button>
@@ -99,34 +76,11 @@ export default function Comparator() {
           <EmptyHint>Nada para comparar no filtro atual.</EmptyHint>
         ) : (
           <>
-            <div className="comparator__picker">
-              {options.map((option) => {
-                const isActive = active.includes(option.value)
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`chip ${isActive ? 'is-active' : ''}`}
-                    aria-pressed={isActive}
-                    onClick={() =>
-                      setPicked((current) => {
-                        const next = current.includes(option.value)
-                          ? current.filter((value) => value !== option.value)
-                          : [...current, option.value]
-                        return next.length === 0 ? picked.filter((value) => value !== option.value) : next
-                      })
-                    }
-                  >
-                    {option.label}
-                  </button>
-                )
-              })}
-            </div>
-            <p className="comparator__hint">
-              Marcados entram no grafico. Sem selecao, comparamos as {Math.min(3, options.length)} primeiras.
+            <p className="comparator__coverage">
+              {options.length} {dimension === 'traps' ? 'armadilhas' : 'pragas'} · Capturas de {formatDay(chart.days[0])} a {formatDay(chart.days[chart.days.length - 1])}.
+              {' '}Passe sobre os pontos para identificar cada série. Dias sem captura aparecem como lacunas.
             </p>
-
-            <TrendChart labels={chart.labels} series={chart.series} yLabel="caixas" height={260} />
+            <TrendChart labels={chart.labels} series={chart.series} yLabel="Detecções" height={360} showLegend={false} interactionMode="nearest" ariaLabel={`Comparação de detecções por ${dimension === 'traps' ? 'armadilha' : 'praga'}`} />
           </>
         )}
       </Card>
@@ -134,7 +88,7 @@ export default function Comparator() {
       {dimension === 'pests' && (
         <Card title="Pragas lado a lado" subtitle="Contagem por praga e o que o catalogo diz sobre ela">
           {active.length === 0 ? (
-            <EmptyHint>Selecione ao menos uma praga.</EmptyHint>
+            <EmptyHint>Nenhuma praga no período selecionado.</EmptyHint>
           ) : (
             <div className="table-wrap">
               <table className="data-table">
@@ -188,10 +142,9 @@ export default function Comparator() {
         </Card>
       )}
 
-      <Notice tone="info" title="O que este comparador nao faz">
-        Nao ha ajuste por area, por cultivar ou por intensidade de amostragem nos arquivos de origem, entao a comparacao
-        entre armadilhas e uma leitura direta de caixas. Onde a contagem e igual a zero por falta de dado, a celula fica
-        marcada como ausencia, nunca como "0 caixas".
+      <Notice tone="info" title="Como ler a comparação">
+        As contagens vêm das detecções nas imagens, sem ajuste por área ou intensidade de amostragem.
+        Uma captura sem detecções vale zero; um dia sem captura fica sem valor.
       </Notice>
     </div>
   )
