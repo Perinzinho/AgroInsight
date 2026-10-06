@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useAgro } from '../../data/agroContext'
 import { useDerived } from '../../data/useDerived'
 import { detectionsByPest, variation } from '../../data/selectors'
@@ -7,8 +7,6 @@ import { Card, EmptyHint, Notice } from '../../core/components/ui'
 import { formatDay, formatNumber, formatPercent } from '../../core/utils/format'
 import { buildComparisonChart } from './comparisonChart'
 import './comparator.css'
-
-type Dimension = 'traps' | 'pests'
 
 /**
  * Comparador lado a lado.
@@ -20,15 +18,9 @@ type Dimension = 'traps' | 'pests'
 export default function Comparator() {
   const { data, filters } = useAgro()
   const derived = useDerived()
-  const [dimension, setDimension] = useState<Dimension>('traps')
-
-  const ranking = useMemo(() => derived?.ranking ?? [], [derived])
   const byPest = useMemo(() => derived?.byPest ?? [], [derived])
 
-  const options = useMemo(() => {
-    if (dimension === 'traps') return ranking.map((row) => ({ value: row.trapCode, label: row.trapCode }))
-    return byPest.map((row) => ({ value: row.pestKey, label: row.pestName }))
-  }, [dimension, ranking, byPest])
+  const options = useMemo(() => byPest.map((row) => ({ value: row.pestKey, label: row.pestName })), [byPest])
 
   const active = useMemo(() => options.map((option) => option.value), [options])
 
@@ -38,54 +30,34 @@ export default function Comparator() {
       rows: derived.rows,
       days: derived.days,
       coverage: data.manifest.coverage.events.range,
-      dimension,
+      dimension: 'pests',
       options,
       pestKeys: derived.pestKeys,
     })
-  }, [data, derived, dimension, options])
+  }, [data, derived, options])
 
   if (!data || !derived || !chart) return null
 
   return (
     <div className="comparator">
       <Card
-        title="Comparador"
+        title="Comparador por praga"
         subtitle={`${formatDay(filters.from)} a ${formatDay(filters.to)}`}
-        actions={
-          <div className="comparator__tabs" role="group" aria-label="O que comparar">
-            <button
-              type="button"
-              className={`chip ${dimension === 'traps' ? 'is-active' : ''}`}
-              aria-pressed={dimension === 'traps'}
-              onClick={() => setDimension('traps')}
-            >
-              Por armadilha
-            </button>
-            <button
-              type="button"
-              className={`chip ${dimension === 'pests' ? 'is-active' : ''}`}
-              aria-pressed={dimension === 'pests'}
-              onClick={() => setDimension('pests')}
-            >
-              Por praga
-            </button>
-          </div>
-        }
       >
         {options.length === 0 ? (
           <EmptyHint>Nada para comparar no filtro atual.</EmptyHint>
         ) : (
           <>
             <p className="comparator__coverage">
-              {options.length} {dimension === 'traps' ? 'armadilhas' : 'pragas'} · Capturas de {formatDay(chart.days[0])} a {formatDay(chart.days[chart.days.length - 1])}.
+              {options.length} pragas · Capturas de {formatDay(chart.days[0])} a {formatDay(chart.days[chart.days.length - 1])}.
               {' '}Passe sobre os pontos para identificar cada série. Dias sem captura aparecem como lacunas.
             </p>
-            <TrendChart labels={chart.labels} series={chart.series} yLabel="Detecções" height={360} showLegend={false} interactionMode="nearest" ariaLabel={`Comparação de detecções por ${dimension === 'traps' ? 'armadilha' : 'praga'}`} />
+            <TrendChart labels={chart.labels} series={chart.series} yLabel="Detecções" height={360} showLegend={false} interactionMode="nearest" ariaLabel="Comparação de detecções por praga" />
             <div className="comparator__mean" role="region" aria-label="Média geral">
               <p className="comparator__mean-label">Média geral</p>
               <p className="comparator__mean-value">
                 {formatNumber(chart.mean, 2)}
-                {chart.mean !== null && <span>detecções por {dimension === 'traps' ? 'armadilha' : 'praga'} por dia</span>}
+                {chart.mean !== null && <span>detecções por praga por dia</span>}
               </p>
               <p className="comparator__mean-note">
                 {chart.mean === null
@@ -97,62 +69,60 @@ export default function Comparator() {
         )}
       </Card>
 
-      {dimension === 'pests' && (
-        <Card title="Pragas lado a lado" subtitle="Contagem por praga e o que o catalogo diz sobre ela">
-          {active.length === 0 ? (
-            <EmptyHint>Nenhuma praga no período selecionado.</EmptyHint>
-          ) : (
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Medida</th>
-                    {active.map((pestKey) => (
-                      <th key={pestKey} className="is-number">
-                        {byPest.find((row) => row.pestKey === pestKey)?.pestName ?? pestKey}
-                      </th>
-                    ))}
-                    <th className="is-number">Maior - menor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <CompareRow
-                    label="Caixas"
-                    values={active.map((pestKey) => detectionsByPest(derived.rows, [pestKey])[0]?.detections ?? null)}
-                  />
-                  <CompareRow
-                    label="Capturas"
-                    values={active.map((pestKey) => detectionsByPest(derived.rows, [pestKey])[0]?.captures ?? null)}
-                  />
-                  <CompareRow
-                    label="Confianca media"
-                    decimals={2}
-                    values={active.map(
-                      (pestKey) => {
-                        const value = detectionsByPest(derived.rows, [pestKey])[0]?.meanConfidence ?? null
-                        return value === null ? null : value * 100
-                      },
-                    )}
-                  />
-                  <tr>
-                    <td>Limiar de alerta</td>
-                    {active.map((pestKey) => {
-                      const group = data.pests.groups.find((item) => item.key === pestKey)
-                      const variant = group?.variants.find((item) => item.culture === derived.trapCulture)
-                      return (
-                        <td key={pestKey} className="is-number">
-                          {formatNumber(variant?.thresholds.alert ?? null)}
-                        </td>
-                      )
-                    })}
-                    <td className="is-number">—</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      )}
+      <Card title="Pragas lado a lado" subtitle="Contagem por praga e o que o catalogo diz sobre ela">
+        {active.length === 0 ? (
+          <EmptyHint>Nenhuma praga no período selecionado.</EmptyHint>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Medida</th>
+                  {active.map((pestKey) => (
+                    <th key={pestKey} className="is-number">
+                      {byPest.find((row) => row.pestKey === pestKey)?.pestName ?? pestKey}
+                    </th>
+                  ))}
+                  <th className="is-number">Maior - menor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <CompareRow
+                  label="Caixas"
+                  values={active.map((pestKey) => detectionsByPest(derived.rows, [pestKey])[0]?.detections ?? null)}
+                />
+                <CompareRow
+                  label="Capturas"
+                  values={active.map((pestKey) => detectionsByPest(derived.rows, [pestKey])[0]?.captures ?? null)}
+                />
+                <CompareRow
+                  label="Confianca media"
+                  decimals={2}
+                  values={active.map(
+                    (pestKey) => {
+                      const value = detectionsByPest(derived.rows, [pestKey])[0]?.meanConfidence ?? null
+                      return value === null ? null : value * 100
+                    },
+                  )}
+                />
+                <tr>
+                  <td>Limiar de alerta</td>
+                  {active.map((pestKey) => {
+                    const group = data.pests.groups.find((item) => item.key === pestKey)
+                    const variant = group?.variants.find((item) => item.culture === derived.trapCulture)
+                    return (
+                      <td key={pestKey} className="is-number">
+                        {formatNumber(variant?.thresholds.alert ?? null)}
+                      </td>
+                    )
+                  })}
+                  <td className="is-number">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
       <Notice tone="info" title="Como ler a comparação">
         As contagens vêm das detecções nas imagens, sem ajuste por área ou intensidade de amostragem.
