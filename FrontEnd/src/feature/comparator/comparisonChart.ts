@@ -29,5 +29,17 @@ export function buildComparisonChart({ rows, days, coverage, dimension, options,
       tension: 0,
     }
   })
-  return { days: chartDays, labels: chartDays.map(formatDayShort), series }
+  // A média usa os pontos exibidos: zero é válido, lacunas não são medições.
+  let total = 0
+  let pointCount = 0
+  for (const entry of series) {
+    for (const value of entry.values) {
+      if (value === null) continue
+      total += value
+      pointCount += 1
+    }
+  }
+  const mean = pointCount > 0 ? total / pointCount : null
+
+  return { days: chartDays, labels: chartDays.map(formatDayShort), series, mean }
 }

@@ -37,6 +37,25 @@ describe('comparador com todas as séries', () => {
     const row = { ...dataset.rows[0], trapCode: 'A', day: '2026-02-01', captures: 1, detections: 0, pests: [] } as TrapSeriesRow
     const chart = buildComparisonChart({ rows: [row], days: ['2026-02-01', '2026-02-02'], coverage, dimension: 'traps', options: [{ value: 'A', label: 'A' }], pestKeys: [] })
     expect(chart.series[0].values).toEqual([0, null])
+    expect(chart.mean).toBe(0)
+  })
+
+  it.each(['traps', 'pests'] as const)('calcula a média geral dos pontos exibidos por %s sem contar lacunas', (dimension) => {
+    const rows = [
+      { ...dataset.rows[0], trapCode: 'A', day: '2026-02-01', captures: 1, detections: 6, pests: [{ pestKey: 'pest', pestName: 'Praga', captures: 1, detections: 6, meanConfidence: null }] },
+      { ...dataset.rows[0], trapCode: 'B', day: '2026-02-02', captures: 1, detections: 0, pests: [] },
+    ] as TrapSeriesRow[]
+    const options = dimension === 'traps'
+      ? [{ value: 'A', label: 'A' }, { value: 'B', label: 'B' }]
+      : [{ value: 'pest', label: 'Praga' }]
+    const chart = buildComparisonChart({ rows, days: ['2026-02-01', '2026-02-02', '2026-02-03'], coverage, dimension, options, pestKeys: [] })
+    expect(chart.mean).toBe(3)
+  })
+
+  it('não apresenta zero como média quando não há capturas', () => {
+    const row = { ...dataset.rows[0], trapCode: 'A', day: '2026-02-01', captures: 0, detections: 0, pests: [] } as TrapSeriesRow
+    const chart = buildComparisonChart({ rows: [row], days: ['2026-02-01'], coverage, dimension: 'traps', options: [{ value: 'A', label: 'A' }], pestKeys: [] })
+    expect(chart.mean).toBeNull()
   })
 
   it('mantém a soma das capturas e das pragas coerente com a origem', () => {

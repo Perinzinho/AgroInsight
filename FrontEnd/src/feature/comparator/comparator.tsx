@@ -81,6 +81,18 @@ export default function Comparator() {
               {' '}Passe sobre os pontos para identificar cada série. Dias sem captura aparecem como lacunas.
             </p>
             <TrendChart labels={chart.labels} series={chart.series} yLabel="Detecções" height={360} showLegend={false} interactionMode="nearest" ariaLabel={`Comparação de detecções por ${dimension === 'traps' ? 'armadilha' : 'praga'}`} />
+            <div className="comparator__mean" role="region" aria-label="Média geral">
+              <p className="comparator__mean-label">Média geral</p>
+              <p className="comparator__mean-value">
+                {formatNumber(chart.mean, 2)}
+                {chart.mean !== null && <span>detecções por {dimension === 'traps' ? 'armadilha' : 'praga'} por dia</span>}
+              </p>
+              <p className="comparator__mean-note">
+                {chart.mean === null
+                  ? 'Sem capturas no período selecionado para calcular a média.'
+                  : 'Média de todos os pontos do gráfico nos dias com captura. Dias sem captura ficam fora do cálculo.'}
+              </p>
+            </div>
           </>
         )}
       </Card>
