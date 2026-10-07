@@ -12,12 +12,13 @@ import Comparator from '../comparator/comparator'
 import Operations from '../operations/operations'
 import Machine from '../machine/machine'
 import DataQuality from '../dataQuality/dataQuality'
+import Recommendations from '../recommendations/recommendations'
 import { DataState } from '../../core/components/ui'
 import { formatDateTime } from '../../core/utils/format'
 import AgroIcon, { type AgroIconName } from '../../core/components/agroIcon'
 import './shell.css'
 
-export type ViewId = 'visao-geral' | 'tendencias' | 'mapa' | 'armadilha' | 'clima' | 'operacoes' | 'alertas-maquina' | 'pragas' | 'comparador' | 'qualidade'
+export type ViewId = 'visao-geral' | 'tendencias' | 'mapa' | 'armadilha' | 'clima' | 'operacoes' | 'alertas-maquina' | 'pragas' | 'comparador' | 'qualidade' | 'recomendacao-ia'
 
 interface Route { view: ViewId; trapCode: string | null }
 interface View { id: ViewId; label: string; group: string; number: string; description: string; render: (route: Route) => ReactNode }
@@ -31,14 +32,15 @@ const VIEWS: View[] = [
   { id: 'operacoes', label: 'Operações', group: 'Operação', number: '06', description: 'Ordens de serviço, áreas e doses aplicadas em fertilização e pulverização.', render: () => <Operations /> },
   { id: 'alertas-maquina', label: 'Alertas de máquina', group: 'Operação', number: '07', description: 'Ocorrências e paradas da frota, organizadas para investigação.', render: () => <Machine /> },
   { id: 'pragas', label: 'Pragas', group: 'Referência', number: '08', description: 'Consulte o catálogo e os limiares usados na leitura das detecções.', render: () => <Pests /> },
-  { id: 'comparador', label: 'Comparador', group: 'Referência', number: '09', description: 'Coloque armadilhas e pragas lado a lado para encontrar diferenças.', render: () => <Comparator /> },
+  { id: 'comparador', label: 'Comparador', group: 'Referência', number: '09', description: 'Coloque pragas lado a lado para encontrar diferenças.', render: () => <Comparator /> },
   { id: 'qualidade', label: 'Qualidade dos dados', group: 'Referência', number: '10', description: 'Veja a cobertura, as regras e os avisos que sustentam cada análise.', render: () => <DataQuality /> },
+  { id: 'recomendacao-ia', label: 'Recomendação (IA)', group: 'Inteligência', number: '11', description: 'Sugestões para acompanhar o campo a partir dos indicadores das outras telas.', render: () => <Recommendations /> },
 ]
 
 const VIEW_ICONS: Record<ViewId, AgroIconName> = {
   'visao-geral': 'overview', tendencias: 'trends', mapa: 'map', armadilha: 'trap',
   clima: 'climate', operacoes: 'operations', 'alertas-maquina': 'machine',
-  pragas: 'pests', comparador: 'compare', qualidade: 'quality',
+  pragas: 'pests', comparador: 'compare', qualidade: 'quality', 'recomendacao-ia': 'recommendations',
 }
 
 function readHash(): Route {

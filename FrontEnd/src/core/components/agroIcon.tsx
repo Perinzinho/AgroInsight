@@ -11,6 +11,7 @@ const paths = {
   pests: 'M8 9h8v7a4 4 0 0 1-8 0V9z M9 9V7a3 3 0 0 1 6 0v2 M9 3l1 2 M15 3l-1 2 M4 10l4 2 M20 10l-4 2 M3 16h5 M21 16h-5 M5 21l4-3 M19 21l-4-3 M12 10v10',
   compare: 'M4 5h6v16H4z M14 3h6v18h-6z M4 10h6 M14 8h6',
   quality: 'M12 3 3 7v6c0 5 9 9 9 9s9-4 9-9V7l-9-4z M8 12l3 3 5-6',
+  recommendations: 'M9 18h6 M10 21h4 M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 4H9c0-2 0-3-1-4 M12 1v1 M2 9h2 M20 9h2 M4 3l2 2 M20 3l-2 2',
 } as const
 
 export type AgroIconName = keyof typeof paths
