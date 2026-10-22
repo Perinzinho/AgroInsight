@@ -29,7 +29,7 @@ Chart.register(
 
 Chart.defaults.color = colors.text.secondary
 Chart.defaults.borderColor = colors.border.default
-Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif"
+Chart.defaults.font.family = "'Manrope', sans-serif"
 
 export interface SeriesSpec {
   label: string
@@ -128,6 +128,7 @@ export default function TrendChart({
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 500, easing: 'easeOutQuart' },
         interaction: { mode: interactionMode, intersect: false },
         plugins: {
           legend: {
@@ -136,12 +137,12 @@ export default function TrendChart({
             labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 }, padding: 12 },
           },
           tooltip: {
-            backgroundColor: colors.background.surfaceElevated,
-            borderColor: colors.border.strong,
-            borderWidth: 1,
-            titleColor: colors.text.primary,
-            bodyColor: colors.text.secondary,
-            padding: 10,
+            backgroundColor: colors.green.dark,
+            titleColor: colors.background.surface,
+            bodyColor: colors.background.surface,
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: false,
             callbacks: {
               label: (context) =>
                 ` ${context.dataset.label}: ${
@@ -151,11 +152,13 @@ export default function TrendChart({
           },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 14, font: { size: 10 } } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 14, padding: 8, font: { size: 10 } } },
           y: {
             beginAtZero: true,
+            border: { display: false },
+            grid: { color: `${colors.border.default}88`, drawTicks: false },
             title: yLabel ? { display: true, text: yLabel, font: { size: 10 } } : undefined,
-            ticks: { precision: 0, font: { size: 10 } },
+            ticks: { precision: 0, padding: 10, font: { size: 10 } },
           },
         },
       },

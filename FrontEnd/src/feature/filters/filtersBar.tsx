@@ -1,5 +1,6 @@
 import { useAgro } from '../../data/agroContext'
 import { formatDay } from '../../core/utils/format'
+import AgroIcon from '../../core/components/agroIcon'
 import './filtersBar.css'
 
 const PRESETS = [
@@ -21,7 +22,7 @@ export default function FiltersBar() {
 
   return (
     <div className="filters-bar">
-      <div className="filters-bar__intro"><span>Período</span><strong>{formatDay(filters.from)} — {formatDay(filters.to)}</strong></div>
+      <div className="filters-bar__intro"><AgroIcon name="calendar" width="18" height="18" /><span>Período</span><strong>{formatDay(filters.from)} <span className="filters-bar__separator">a</span> {formatDay(filters.to)}</strong></div>
       <div className="filters-bar__presets" role="group" aria-label="Atalhos de periodo">
         {PRESETS.map((preset) => (
           <button

@@ -1,6 +1,18 @@
 import type { SVGProps } from 'react'
 
 const paths = {
+  arrow: 'M5 12h14 M13 6l6 6-6 6',
+  arrowUpRight: 'M6 18 18 6 M6 6h12v12',
+  chevron: 'm9 5 7 7-7 7',
+  menu: 'M4 6h16 M4 12h16 M4 18h16',
+  close: 'm6 6 12 12 M18 6 6 18',
+  calendar: 'M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M16 3v4 M8 3v4 M3 11h18 M8 15h2 M14 15h2',
+  leaf: 'M20 4C10 2 3 7 5 14c2 7 14 6 15-10z M4 21 15 10',
+  sun: 'M12 3v1 M12 20v1 M3 12h1 M20 12h1 M5.6 5.6l.7.7 M17.7 17.7l.7.7 M5.6 18.4l.7-.7 M17.7 6.3l.7-.7 M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+  rain: 'M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9-2 5 5 0 0 1 1 10 M8 18l-1 3 M13 17l-1 3 M18 18l-1 3',
+  wind: 'M3 8h12a3 3 0 1 0-3-3 M3 12h15a3 3 0 1 1-3 3 M3 16h5a3 3 0 1 1-3 3',
+  droplet: 'M12 3C10 7 5 11 5 15a7 7 0 0 0 14 0c0-4-5-8-7-12z M8 15a4 4 0 0 0 4 4',
+  info: 'M12 11v6 M12 7v.1 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   overview: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
   trends: 'M3 3v18h18 M6 15l5-5 4 3 6-8',
   map: 'M9 4 3 6v15l6-2 6 2 6-2V4l-6 2-6-2z M9 4v15 M15 6v15',

@@ -38,6 +38,7 @@ export function Stat({
   value,
   note,
   delta,
+  icon,
   tone = 'neutral',
 }: {
   label: string
@@ -45,13 +46,14 @@ export function Stat({
   value: string | null
   note: string
   delta?: string | null
+  icon?: ReactNode
   tone?: 'green' | 'yellow' | 'blue' | 'red' | 'neutral'
 }) {
   return (
     <article className={`stat stat--${tone}`}>
-      <p className="stat__label">{label}</p>
-      <strong className="stat__value">{value ?? MISSING}</strong>
-      <small className="stat__note">{value === null ? note : delta ? `${note} · ${delta}` : note}</small>
+      <p className="stat__label">{icon && <span className="stat__icon">{icon}</span>}{label}</p>
+      <div className="stat__reading"><strong className="stat__value" key={value}>{value ?? MISSING}</strong>{value !== null && delta && <span className="stat__delta">{delta}</span>}</div>
+      <small className="stat__note">{note}</small>
     </article>
   )
 }

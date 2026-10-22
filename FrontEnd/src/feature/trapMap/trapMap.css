@@ -16,7 +16,7 @@
 }
 
 .leaflet-container {
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: 'Manrope', sans-serif;
   background: #e9eee4;
 }
 
@@ -34,7 +34,7 @@
 }
 
 .leaflet-control-attribution {
-  background: var(--color-overlay) !important;
+  background: var(--color-surface) !important;
   color: var(--color-text-muted) !important;
   font-size: 12px !important;
 }

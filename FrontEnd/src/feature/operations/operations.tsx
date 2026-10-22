@@ -21,7 +21,7 @@ import './operations.css'
  * pressao — e a pressao e a coluna que vem zerada em toda a base.
  */
 export default function Operations() {
-  const { data, filters } = useAgro()
+  const { data } = useAgro()
   const [kind, setKind] = useState<'fertilization' | 'spray'>('fertilization')
 
   const index: OperationsIndexPayload | null = data === null ? null : kind === 'fertilization' ? data.fertilization : data.spray
@@ -30,12 +30,8 @@ export default function Operations() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const rows = useMemo(() => {
-    if (!index) return []
-    return index.operations.filter(
-      (operation) => operation.lastAt.slice(0, 10) >= filters.from && operation.firstAt.slice(0, 10) <= filters.to,
-    )
-  }, [index, filters.from, filters.to])
+  // Operações sempre mostra a base completa, independente do período das outras telas.
+  const rows = useMemo(() => index?.operations ?? [], [index])
 
   const totals = useMemo(() => {
     return rows.reduce(
@@ -108,7 +104,7 @@ export default function Operations() {
         }
       >
         {rows.length === 0 ? (
-          <EmptyHint>Nenhuma ordem de servico no periodo selecionado.</EmptyHint>
+          <EmptyHint>Nenhuma ordem de serviço disponível nesta base.</EmptyHint>
         ) : (
           <>
             <div className="operations__totals">

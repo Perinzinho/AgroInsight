@@ -60,7 +60,7 @@ export default function TrapMap() {
 
           {data.machineAlerts.alerts.map((alert) => (
             <CircleMarker
-              key={alert.alertId}
+              key={`${alert.alertId}:${alert.sourceRow}`}
               center={[alert.location.latitude, alert.location.longitude]}
               radius={5}
               pathOptions={{

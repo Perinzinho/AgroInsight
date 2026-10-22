@@ -147,7 +147,7 @@ export default function Machine() {
               </thead>
               <tbody>
                 {rows.slice(0, 400).map((alert) => (
-                  <tr key={alert.alertId} className={alert.outOfProperty ? 'machine__row--out' : undefined}>
+                  <tr key={`${alert.alertId}:${alert.sourceRow}`} className={alert.outOfProperty ? 'machine__row--out' : undefined}>
                     <td className="is-primary">
                       {formatTime(alert.at)}
                       <span className="machine__day">{alert.day}</span>

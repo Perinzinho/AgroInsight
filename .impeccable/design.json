@@ -1,0 +1,537 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T11:54:59.392631+00:00",
+  "title": "Design System: AgroInsight",
+  "extensions": {
+    "colorMeta": {
+      "forest": {
+        "role": "primary",
+        "displayName": "Forest",
+        "canonical": "#173f35",
+        "tonalRamp": [
+          "oklch(15% 0.0486 174.30)",
+          "oklch(26% 0.0486 174.30)",
+          "oklch(38% 0.0486 174.30)",
+          "oklch(49% 0.0486 174.30)",
+          "oklch(61% 0.0486 174.30)",
+          "oklch(72% 0.0486 174.30)",
+          "oklch(84% 0.0486 174.30)",
+          "oklch(95% 0.0486 174.30)"
+        ]
+      },
+      "green": {
+        "role": "primary",
+        "displayName": "Green",
+        "canonical": "#2a6b4b",
+        "tonalRamp": [
+          "oklch(15% 0.0848 159.14)",
+          "oklch(26% 0.0848 159.14)",
+          "oklch(38% 0.0848 159.14)",
+          "oklch(49% 0.0848 159.14)",
+          "oklch(61% 0.0848 159.14)",
+          "oklch(72% 0.0848 159.14)",
+          "oklch(84% 0.0848 159.14)",
+          "oklch(95% 0.0848 159.14)"
+        ]
+      },
+      "green-dark": {
+        "role": "primary",
+        "displayName": "Green dark",
+        "canonical": "#194933",
+        "tonalRamp": [
+          "oklch(15% 0.0649 160.63)",
+          "oklch(26% 0.0649 160.63)",
+          "oklch(38% 0.0649 160.63)",
+          "oklch(49% 0.0649 160.63)",
+          "oklch(61% 0.0649 160.63)",
+          "oklch(72% 0.0649 160.63)",
+          "oklch(84% 0.0649 160.63)",
+          "oklch(95% 0.0649 160.63)"
+        ]
+      },
+      "sage": {
+        "role": "secondary",
+        "displayName": "Sage",
+        "canonical": "#e8efdf",
+        "tonalRamp": [
+          "oklch(15% 0.0225 126.23)",
+          "oklch(26% 0.0225 126.23)",
+          "oklch(38% 0.0225 126.23)",
+          "oklch(49% 0.0225 126.23)",
+          "oklch(61% 0.0225 126.23)",
+          "oklch(72% 0.0225 126.23)",
+          "oklch(84% 0.0225 126.23)",
+          "oklch(95% 0.0225 126.23)"
+        ]
+      },
+      "sage-text": {
+        "role": "secondary",
+        "displayName": "Sage text",
+        "canonical": "#364c35",
+        "tonalRamp": [
+          "oklch(15% 0.0470 143.56)",
+          "oklch(26% 0.0470 143.56)",
+          "oklch(38% 0.0470 143.56)",
+          "oklch(49% 0.0470 143.56)",
+          "oklch(61% 0.0470 143.56)",
+          "oklch(72% 0.0470 143.56)",
+          "oklch(84% 0.0470 143.56)",
+          "oklch(95% 0.0470 143.56)"
+        ]
+      },
+      "yellow": {
+        "role": "secondary",
+        "displayName": "Yellow",
+        "canonical": "#bc914d",
+        "tonalRamp": [
+          "oklch(15% 0.1004 77.21)",
+          "oklch(26% 0.1004 77.21)",
+          "oklch(38% 0.1004 77.21)",
+          "oklch(49% 0.1004 77.21)",
+          "oklch(61% 0.1004 77.21)",
+          "oklch(72% 0.1004 77.21)",
+          "oklch(84% 0.1004 77.21)",
+          "oklch(95% 0.1004 77.21)"
+        ]
+      },
+      "yellow-dark": {
+        "role": "secondary",
+        "displayName": "Yellow dark",
+        "canonical": "#8e6b31",
+        "tonalRamp": [
+          "oklch(15% 0.0874 77.80)",
+          "oklch(26% 0.0874 77.80)",
+          "oklch(38% 0.0874 77.80)",
+          "oklch(49% 0.0874 77.80)",
+          "oklch(61% 0.0874 77.80)",
+          "oklch(72% 0.0874 77.80)",
+          "oklch(84% 0.0874 77.80)",
+          "oklch(95% 0.0874 77.80)"
+        ]
+      },
+      "blue": {
+        "role": "secondary",
+        "displayName": "Blue",
+        "canonical": "#4c8190",
+        "tonalRamp": [
+          "oklch(15% 0.0609 217.95)",
+          "oklch(26% 0.0609 217.95)",
+          "oklch(38% 0.0609 217.95)",
+          "oklch(49% 0.0609 217.95)",
+          "oklch(61% 0.0609 217.95)",
+          "oklch(72% 0.0609 217.95)",
+          "oklch(84% 0.0609 217.95)",
+          "oklch(95% 0.0609 217.95)"
+        ]
+      },
+      "blue-dark": {
+        "role": "secondary",
+        "displayName": "Blue dark",
+        "canonical": "#315e6d",
+        "tonalRamp": [
+          "oklch(15% 0.0552 221.88)",
+          "oklch(26% 0.0552 221.88)",
+          "oklch(38% 0.0552 221.88)",
+          "oklch(49% 0.0552 221.88)",
+          "oklch(61% 0.0552 221.88)",
+          "oklch(72% 0.0552 221.88)",
+          "oklch(84% 0.0552 221.88)",
+          "oklch(95% 0.0552 221.88)"
+        ]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "Danger",
+        "canonical": "#bd5c43",
+        "tonalRamp": [
+          "oklch(15% 0.1310 35.53)",
+          "oklch(26% 0.1310 35.53)",
+          "oklch(38% 0.1310 35.53)",
+          "oklch(49% 0.1310 35.53)",
+          "oklch(61% 0.1310 35.53)",
+          "oklch(72% 0.1310 35.53)",
+          "oklch(84% 0.1310 35.53)",
+          "oklch(95% 0.1310 35.53)"
+        ]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Page",
+        "canonical": "#f4f6f3",
+        "tonalRamp": [
+          "oklch(15% 0.0045 134.85)",
+          "oklch(26% 0.0045 134.85)",
+          "oklch(38% 0.0045 134.85)",
+          "oklch(49% 0.0045 134.85)",
+          "oklch(61% 0.0045 134.85)",
+          "oklch(72% 0.0045 134.85)",
+          "oklch(84% 0.0045 134.85)",
+          "oklch(95% 0.0045 134.85)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "surface-elevated": {
+        "role": "neutral",
+        "displayName": "Surface elevated",
+        "canonical": "#edf1ec",
+        "tonalRamp": [
+          "oklch(15% 0.0079 139.44)",
+          "oklch(26% 0.0079 139.44)",
+          "oklch(38% 0.0079 139.44)",
+          "oklch(49% 0.0079 139.44)",
+          "oklch(61% 0.0079 139.44)",
+          "oklch(72% 0.0079 139.44)",
+          "oklch(84% 0.0079 139.44)",
+          "oklch(95% 0.0079 139.44)"
+        ]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Text primary",
+        "canonical": "#1e352b",
+        "tonalRamp": [
+          "oklch(15% 0.0345 164.95)",
+          "oklch(26% 0.0345 164.95)",
+          "oklch(38% 0.0345 164.95)",
+          "oklch(49% 0.0345 164.95)",
+          "oklch(61% 0.0345 164.95)",
+          "oklch(72% 0.0345 164.95)",
+          "oklch(84% 0.0345 164.95)",
+          "oklch(95% 0.0345 164.95)"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Text secondary",
+        "canonical": "#5e6e64",
+        "tonalRamp": [
+          "oklch(15% 0.0248 158.01)",
+          "oklch(26% 0.0248 158.01)",
+          "oklch(38% 0.0248 158.01)",
+          "oklch(49% 0.0248 158.01)",
+          "oklch(61% 0.0248 158.01)",
+          "oklch(72% 0.0248 158.01)",
+          "oklch(84% 0.0248 158.01)",
+          "oklch(95% 0.0248 158.01)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text muted",
+        "canonical": "#647369",
+        "tonalRamp": [
+          "oklch(15% 0.0237 156.34)",
+          "oklch(26% 0.0237 156.34)",
+          "oklch(38% 0.0237 156.34)",
+          "oklch(49% 0.0237 156.34)",
+          "oklch(61% 0.0237 156.34)",
+          "oklch(72% 0.0237 156.34)",
+          "oklch(84% 0.0237 156.34)",
+          "oklch(95% 0.0237 156.34)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "canonical": "#dce3da",
+        "tonalRamp": [
+          "oklch(15% 0.0142 138.71)",
+          "oklch(26% 0.0142 138.71)",
+          "oklch(38% 0.0142 138.71)",
+          "oklch(49% 0.0142 138.71)",
+          "oklch(61% 0.0142 138.71)",
+          "oklch(72% 0.0142 138.71)",
+          "oklch(84% 0.0142 138.71)",
+          "oklch(95% 0.0142 138.71)"
+        ]
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Border strong",
+        "canonical": "#c5d0c3",
+        "tonalRamp": [
+          "oklch(15% 0.0214 140.89)",
+          "oklch(26% 0.0214 140.89)",
+          "oklch(38% 0.0214 140.89)",
+          "oklch(49% 0.0214 140.89)",
+          "oklch(61% 0.0214 140.89)",
+          "oklch(72% 0.0214 140.89)",
+          "oklch(84% 0.0214 140.89)",
+          "oklch(95% 0.0214 140.89)"
+        ]
+      },
+      "overlay-green": {
+        "role": "secondary",
+        "displayName": "Overlay green",
+        "canonical": "rgba(42, 107, 75, 0.10)",
+        "tonalRamp": [
+          "oklch(15% 0.0848 159.14)",
+          "oklch(26% 0.0848 159.14)",
+          "oklch(38% 0.0848 159.14)",
+          "oklch(49% 0.0848 159.14)",
+          "oklch(61% 0.0848 159.14)",
+          "oklch(72% 0.0848 159.14)",
+          "oklch(84% 0.0848 159.14)",
+          "oklch(95% 0.0848 159.14)"
+        ]
+      },
+      "overlay-blue": {
+        "role": "secondary",
+        "displayName": "Overlay blue",
+        "canonical": "rgba(76, 129, 144, 0.10)",
+        "tonalRamp": [
+          "oklch(15% 0.0609 217.95)",
+          "oklch(26% 0.0609 217.95)",
+          "oklch(38% 0.0609 217.95)",
+          "oklch(49% 0.0609 217.95)",
+          "oklch(61% 0.0609 217.95)",
+          "oklch(72% 0.0609 217.95)",
+          "oklch(84% 0.0609 217.95)",
+          "oklch(95% 0.0609 217.95)"
+        ]
+      },
+      "overlay-yellow": {
+        "role": "secondary",
+        "displayName": "Overlay yellow",
+        "canonical": "rgba(188, 145, 77, 0.12)",
+        "tonalRamp": [
+          "oklch(15% 0.1004 77.21)",
+          "oklch(26% 0.1004 77.21)",
+          "oklch(38% 0.1004 77.21)",
+          "oklch(49% 0.1004 77.21)",
+          "oklch(61% 0.1004 77.21)",
+          "oklch(72% 0.1004 77.21)",
+          "oklch(84% 0.1004 77.21)",
+          "oklch(95% 0.1004 77.21)"
+        ]
+      },
+      "overlay-red": {
+        "role": "secondary",
+        "displayName": "Overlay red",
+        "canonical": "rgba(189, 92, 67, 0.10)",
+        "tonalRamp": [
+          "oklch(15% 0.1310 35.53)",
+          "oklch(26% 0.1310 35.53)",
+          "oklch(38% 0.1310 35.53)",
+          "oklch(49% 0.1310 35.53)",
+          "oklch(61% 0.1310 35.53)",
+          "oklch(72% 0.1310 35.53)",
+          "oklch(84% 0.1310 35.53)",
+          "oklch(95% 0.1310 35.53)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Chamada da paisagem",
+        "purpose": "Título da visão geral."
+      },
+      "headline": {
+        "displayName": "Título de rota",
+        "purpose": "Identificação de cada análise."
+      },
+      "title": {
+        "displayName": "Título de painel",
+        "purpose": "Hierarquia interna."
+      },
+      "body": {
+        "displayName": "Texto de apoio",
+        "purpose": "Subtítulos e explicações."
+      },
+      "label": {
+        "displayName": "Rótulo",
+        "purpose": "Controles e indicadores."
+      },
+      "metric": {
+        "displayName": "Medida",
+        "purpose": "Contagens com números tabulares."
+      }
+    },
+    "shadows": [
+      {
+        "name": "segmented-selected",
+        "value": "0 1px 4px rgba(30,55,43,.09)",
+        "purpose": "Seleção no controle segmentado."
+      },
+      {
+        "name": "period-selected",
+        "value": "0 2px 4px rgba(23,63,53,.12)",
+        "purpose": "Período ativo."
+      },
+      {
+        "name": "selector-panel",
+        "value": "0 8px 24px rgba(30, 53, 43, 0.14)",
+        "purpose": "Sobreposição do seletor múltiplo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Foto, menu móvel e setas."
+      },
+      {
+        "name": "field-settle",
+        "value": "1.2s",
+        "purpose": "Acomodação de escala 1.04 para 1 da foto."
+      },
+      {
+        "name": "field-intro",
+        "value": ".8s",
+        "purpose": "Entrada do texto: opacidade .7 e deslocamento 7px."
+      },
+      {
+        "name": "view-change",
+        "value": ".35s ease-out",
+        "purpose": "Mudança de rota: opacidade .65 para 1."
+      },
+      {
+        "name": "number-replace",
+        "value": ".3s ease-out",
+        "purpose": "Substituição numérica: blur de 1px para zero."
+      },
+      {
+        "name": "chart-update",
+        "value": "500ms easeOutQuart",
+        "purpose": "Atualização Chart.js; desativada com movimento reduzido."
+      },
+      {
+        "name": "reduced-motion",
+        "value": ".01ms",
+        "purpose": "Duração CSS sob prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "380px"
+      },
+      {
+        "name": "overview-mobile",
+        "value": "600px"
+      },
+      {
+        "name": "compact-card",
+        "value": "700px"
+      },
+      {
+        "name": "mobile-navigation",
+        "value": "760px"
+      },
+      {
+        "name": "stack-analysis",
+        "value": "1000px"
+      },
+      {
+        "name": "compact-sidebar",
+        "value": "1100px"
+      },
+      {
+        "name": "compact-analysis",
+        "value": "1150px"
+      },
+      {
+        "name": "wide-sidebar",
+        "value": "1700px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Ação da paisagem",
+      "kind": "button",
+      "refersTo": "field-action",
+      "description": "Link de exploração sobre a paisagem da visão geral.",
+      "html": "<a class=\"ds-action\" href=\"#/mapa\">Explorar armadilhas <svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 18 18 6 M6 6h12v12\"/></svg></a>",
+      "css": ".ds-action{display:inline-flex;align-items:center;justify-content:space-between;gap:24px;padding:10px 14px;border-radius:7px;background:#e5efd6;color:#1c3e2b;font-size:12px;font-weight:750;text-decoration:none;font-family:Manrope,sans-serif;transition:background .2s,gap .3s cubic-bezier(.16,1,.3,1)}.ds-action:hover{gap:34px;background:white}.ds-action:focus-visible{outline:2px solid var(--color-green,#2a6b4b);outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-action,.ds-nav-link,.ds-chip,.ds-weather-link svg{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Busca do seletor",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "Campo de busca dentro do seletor múltiplo.",
+      "html": "<input class=\"ds-search\" type=\"search\" aria-label=\"Buscar opções\" placeholder=\"Buscar...\"/>",
+      "css": ".ds-search{width:100%;padding:7px 9px;border:1px solid var(--color-border,#dce3da);border-radius:8px;background:var(--color-surface,#fff);color:var(--color-text-primary,#1e352b);font-size:12px;font-family:Manrope,sans-serif;caret-color:var(--color-green,#2a6b4b)}.ds-search:focus,.ds-search:focus-visible{border-color:var(--color-green-dark,#194933);outline:none}"
+    },
+    {
+      "name": "Navegação",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Links do shell, com estado atual semântico.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Navegação principal\"><a class=\"ds-nav-link\" href=\"#/visao-geral\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z\"/></svg>Visão geral</a><a class=\"ds-nav-link\" href=\"#/mapa\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 4 3 6v15l6-2 6 2 6-2V4l-6 2-6-2z M9 4v15 M15 6v15\"/></svg>Mapa de armadilhas</a></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:3px;padding:16px;background:var(--color-forest,#173f35);font-family:Manrope,sans-serif;}.ds-nav-link{display:flex;align-items:center;gap:11px;min-height:43px;padding:11px 13px;border-radius:8px;color:#d4e1d6;font-size:13px;font-weight:450;line-height:1.35;text-decoration:none;transition:background .2s ease,color .2s ease}.ds-nav-link:hover{background:#284e41;color:white}.ds-nav-link[aria-current=page]{background:#e0edcf;color:#213e2c;font-weight:750}.ds-nav-link:focus-visible{outline:2px solid #d5e7bc;outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-action,.ds-nav-link,.ds-chip,.ds-weather-link svg{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Filtro de período",
+      "kind": "chip",
+      "refersTo": "period-chip",
+      "description": "Presets com seleção e indisponibilidade visíveis.",
+      "html": "<div class=\"ds-presets\" role=\"group\" aria-label=\"Período\"><button class=\"ds-chip\" type=\"button\" aria-pressed=\"false\">7 dias</button><button class=\"ds-chip\" type=\"button\" aria-pressed=\"true\">30 dias</button><button class=\"ds-chip\" type=\"button\" disabled>90 dias</button></div>",
+      "css": ".ds-presets{display:flex;flex-wrap:wrap;gap:3px;padding:4px;border:1px solid var(--color-border,#dce3da);border-radius:9px;background:white}.ds-chip{min-height:30px;padding:6px 13px;border:0;border-radius:6px;background:transparent;color:var(--color-text-secondary,#5e6e64);font-size:11px;font-weight:550;font-family:Manrope,sans-serif;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s,box-shadow .2s}.ds-chip:hover:not(:disabled){background:var(--color-sage,#e8efdf);color:var(--color-green-dark,#194933)}.ds-chip:disabled{opacity:.45;cursor:not-allowed}.ds-chip[aria-pressed=true]{background:var(--color-forest,#173f35);color:white;box-shadow:0 2px 4px rgba(23,63,53,.12)}.ds-chip[aria-pressed=true]:hover{background:var(--color-green-dark,#194933);color:white}.ds-chip:focus-visible{outline:2px solid var(--color-green,#2a6b4b);outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-action,.ds-nav-link,.ds-chip,.ds-weather-link svg{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Painel de análise",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Painel compartilhado; amostra de ausência sem inventar métricas.",
+      "html": "<section class=\"ds-card\"><header class=\"ds-card-head\"><h3 class=\"ds-card-title\">O ritmo do campo</h3><p class=\"ds-card-subtitle\">Evolução diária nas armadilhas monitoradas</p></header><div class=\"ds-card-body\"><p class=\"ds-empty\">Não há registros de armadilhas neste período. Selecione outro intervalo para consultar o histórico.</p></div></section>",
+      "css": ".ds-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--color-border,#dce3da);border-radius:var(--radius-surface,16px);background:var(--color-surface,#fff);overflow:hidden;font-family:Manrope,sans-serif;}.ds-card-head{padding:22px 24px;border-bottom:1px solid var(--color-border,#dce3da)}.ds-card-title{margin:0;color:var(--color-text-primary,#1e352b);font-size:18px;font-weight:750;letter-spacing:-.025em;line-height:1.4}.ds-card-subtitle{margin:7px 0 0;max-width:75ch;color:var(--color-text-secondary,#5e6e64);font-size:13px;line-height:1.8}.ds-card-body{padding:24px}.ds-empty{margin:0;color:var(--color-text-secondary,#5e6e64);font-size:13px;line-height:1.8}"
+    },
+    {
+      "name": "Clima no período",
+      "kind": "custom",
+      "refersTo": "weather",
+      "description": "Superfície sálvia em estado sem medições.",
+      "html": "<section class=\"ds-weather\"><h2>Clima no período</h2><p>A estação não tem medições neste período. Consulte a cobertura na tela de clima.</p><a class=\"ds-weather-link\" href=\"#/clima\">Consultar condições climáticas <svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 18 18 6 M6 6h12v12\"/></svg></a></section>",
+      "css": ".ds-weather{display:flex;flex-direction:column;gap:20px;padding:22px 23px 17px;border-radius:16px;background:var(--color-sage,#e8efdf);color:var(--color-sage-text,#364c35);font-family:Manrope,sans-serif;}.ds-weather h2{margin:0;font-size:14px;font-weight:750;letter-spacing:-.02em}.ds-weather p{margin:0;color:var(--color-text-secondary,#5e6e64);font-size:13px;line-height:1.8}.ds-weather-link{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:15px;margin-top:auto;border-top:1px solid #c8d5be;font-size:12px;font-weight:650;color:inherit;text-decoration:none}.ds-weather-link svg{transition:transform .25s cubic-bezier(.16,1,.3,1)}.ds-weather-link:hover svg{transform:translate(2px,-2px)}.ds-weather-link:focus-visible{outline:2px solid var(--color-green,#2a6b4b);outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-action,.ds-nav-link,.ds-chip,.ds-weather-link svg{transition-duration:.01ms}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "O campo, de perto",
+    "overview": "Uma interface de monitoramento agrícola serena, concreta e próxima do território. A navegação verde floresta enquadra um espaço claro de análise; Manrope, ícones de contorno e tons de sálvia dão identidade sem competir com os registros.\n\nA fotografia panorâmica traz o campo para a visão geral. É uma paisagem ilustrativa, identificada como tal, e não representa a propriedade dos dados. Nas análises, o espaço pertence a filtros, séries, contagens e explicações de cobertura. A expressão visual acompanha a linguagem em português e a distinção entre ausência de dado e zero.",
+    "keyCharacteristics": [
+      "Verde floresta na navegação, superfícies claras na análise.",
+      "Tipografia Manrope local e números tabulares.",
+      "Fotografia real identificada como ilustração.",
+      "Bordas finas, superfícies tonais e movimento breve ligado à interação."
+    ],
+    "rules": [
+      {
+        "name": "The Contexto Rule",
+        "body": "Cor de severidade sempre acompanha um rótulo; não representa sozinha a conclusão sobre o dado.",
+        "section": "colors"
+      },
+      {
+        "name": "The Repouso Rule",
+        "body": "Superfícies de análise permanecem estáveis; elevação pertence a seleção e sobreposição.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** manter a leitura em português, com números tabulares e unidades explícitas.",
+      "**Do** usar fotografia real com origem registrada e indicação de uso ilustrativo.",
+      "**Do** preservar lacunas, avisos de cobertura e ações de recuperação junto dos dados.",
+      "**Do** manter foco visível e respeitar a preferência por movimento reduzido."
+    ],
+    "donts": [
+      "**Don't** trocar dados ausentes por zero ou desenhar continuidade nas lacunas do gráfico.",
+      "**Don't** usar emoji como substituto do sistema de ícones SVG.",
+      "**Don't** aplicar sombra decorativa em todos os painéis ou repetir a paisagem em cada rota.",
+      "**Don't** apresentar recomendações como diagnóstico agronômico."
+    ]
+  }
+}
