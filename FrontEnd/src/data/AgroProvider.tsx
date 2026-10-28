@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
+  clearDataCache,
   loadClimateDaily,
   loadEventsIndex,
   loadFertilization,
@@ -138,6 +139,7 @@ export default function AgroProvider({ children }: { children: ReactNode }) {
   }, [attempt])
 
   const reload = useCallback(() => {
+    clearDataCache()
     setStatus('loading')
     setError(null)
     setAttempt((value) => value + 1)

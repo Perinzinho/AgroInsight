@@ -85,7 +85,7 @@ export interface LevelResult {
 }
 
 export function levelFor(count: number, thresholds: PestVariant['thresholds']): LevelResult {
-  const ordered = (LEVELS.slice(1) as AlertLevel[]).map((level) => ({
+  const ordered = (LEVELS.slice(1) as Exclude<AlertLevel, 'below'>[]).map((level) => ({
     level,
     value: thresholds[level],
   }))

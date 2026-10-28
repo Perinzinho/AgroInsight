@@ -1,10 +1,13 @@
-﻿import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAgro } from '../../data/agroContext'
 import { buildRecommendationAnalysis } from './recommendationMessages'
+import AiConversation from './aiConversation'
 import './recommendations.css'
 
 export default function Recommendations() {
-  const { data, filters } = useAgro()
+  const { data, filters, reload } = useAgro()
+  const scope = JSON.stringify([data?.manifest.generatedAt, filters.from, filters.to, [...filters.trapCodes].sort(), [...filters.pestKeys].sort()])
+  const [initialScope] = useState(scope)
   const analysis = useMemo(() => data ? buildRecommendationAnalysis(data, filters) : null, [data, filters])
   if (!analysis) return null
 
@@ -14,6 +17,8 @@ export default function Recommendations() {
         <h2 id="recommendations-title">Recomendações</h2>
         <p>Ações priorizadas a partir dos dados de {analysis.period}.</p>
       </header>
+      {data && <AiConversation key={scope} filters={filters} datasetVersion={data.manifest.generatedAt} contextChanged={initialScope !== scope} onReload={reload} />}
+      <h3>Indicadores por regras</h3>
       <ol className="recommendations__list">
         {analysis.recommendations.map((item) => (
           <li className="recommendations__item" key={item.id}>
@@ -23,7 +28,7 @@ export default function Recommendations() {
               <p className="recommendations__message">{item.evidence} {item.action}</p>
               <div className="recommendations__item-footer">
                 <small>Fonte: {item.source}</small>
-                <a href={item.href}>Consultar dados <span aria-hidden="true">→</span><span className="recommendations__sr-only">: {item.title}</span></a>
+                <a href={item.href}>{item.href === '#/operacoes' ? 'Abrir histórico de operações' : 'Consultar dados'} <span aria-hidden="true">→</span><span className="recommendations__sr-only">: {item.title}</span></a>
               </div>
             </div>
           </li>

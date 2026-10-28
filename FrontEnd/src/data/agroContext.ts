@@ -1,40 +1,8 @@
 import { createContext, useContext } from 'react'
-import type {
-  ClimateDailyPayload,
-  EventsIndex,
-  MachineAlertsPayload,
-  Manifest,
-  OperationsIndexPayload,
-  PestsPayload,
-  StopReasonsPayload,
-  TrapSeriesPayload,
-  TrapsPayload,
-} from './types'
-
-/** Pacote base do conjunto: tudo que a Visao Geral precisa. */
-export interface Dataset {
-  manifest: Manifest
-  traps: TrapsPayload
-  pests: PestsPayload
-  series: TrapSeriesPayload
-  events: EventsIndex
-  climate: ClimateDailyPayload
-  fertilization: OperationsIndexPayload
-  spray: OperationsIndexPayload
-  machineAlerts: MachineAlertsPayload
-  stopReasons: StopReasonsPayload
-}
+import type { Dataset, Filters } from '../shared/agroContracts'
+export type { Dataset, Filters } from '../shared/agroContracts'
 
 export type LoadStatus = 'loading' | 'ready' | 'error'
-
-/** Filtros globais. Listas vazias significam "todos". */
-export interface Filters {
-  /** `aaaa-mm-dd` no fuso da propriedade. */
-  from: string
-  to: string
-  trapCodes: string[]
-  pestKeys: string[]
-}
 
 export interface AgroContextValue {
   status: LoadStatus

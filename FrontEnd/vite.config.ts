@@ -1,9 +1,16 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
+import { loadEnv } from 'vite'
+import { fileURLToPath } from 'node:url'
+import { readConfig } from './server/config.ts'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), 'AI_')
+  const { AI_HOST, AI_PORT } = readConfig({ AI_HOST: process.env.AI_HOST ?? env.AI_HOST, AI_PORT: process.env.AI_PORT ?? env.AI_PORT })
+  return {
   plugins: [react()],
+  server: { proxy: { '/api/ai': { target: `http://${AI_HOST === '::1' ? '[::1]' : AI_HOST}:${AI_PORT}`, changeOrigin: false } } },
   build: {
     rollupOptions: {
       output: {
@@ -31,4 +38,5 @@ export default defineConfig({
    */
   pool: 'vmThreads',
   },
+  }
 })

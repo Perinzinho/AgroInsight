@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "lib": ["ES2023", "DOM"], "module": "ESNext", "moduleResolution": "Bundler",
+    "types": ["node"], "strict": true, "noEmit": true, "skipLibCheck": true,
+    "verbatimModuleSyntax": true, "noUnusedLocals": true, "noUnusedParameters": true, "allowJs": true
+  },
+  "include": ["server/**/*.ts", "src/shared/**/*.ts", "vitest.server.config.ts"]
+}

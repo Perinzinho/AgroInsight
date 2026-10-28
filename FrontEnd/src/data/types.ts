@@ -110,7 +110,7 @@ export interface TrapSnapshot {
   status: string | null
   batteryStatus: string | null
   photoProgrammedAt: string | null
-  missions: Record<string, string>
+  missions: Record<string, number | null>
   plotName: string | null
   farmName: string | null
   sourceRow: number
@@ -312,7 +312,8 @@ export interface EventsIndexEntry {
 }
 
 export interface EventsIndex {
-  range: [string, string]
+  /** Dias com registros; não é um par início/fim. */
+  range: string[]
   typeCounts: Record<string, number>
   totalCaptures: number
   totalDetections: number
@@ -436,7 +437,7 @@ export interface OperationsIndexPayload {
   }
   operationSpellings: Record<string, string[]>
   operations: MachineOperationSummary[]
-  range: [string, string]
+  range: string[]
   sources: string[]
 }
 
@@ -517,7 +518,7 @@ export interface MachineAlert {
 }
 
 export interface MachineAlertsPayload {
-  range: [string, string]
+  range: string[]
   note: string | null
   alertTypes: Record<string, number>
   classifications: Record<string, number>
