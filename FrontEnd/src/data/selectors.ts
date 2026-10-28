@@ -1,6 +1,6 @@
 import { evaluatePestDay, resolveVariant } from './alertRules'
 import type { AlertLevel } from './alertRules'
-import type { Filters } from './agroContext'
+import type { Filters } from '../shared/agroContracts'
 import type {
   ClimateDay,
   PestGroup,

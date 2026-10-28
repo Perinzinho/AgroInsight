@@ -1,5 +1,11 @@
 # AgroInsight — FrontEnd
 
+## Assistente de análise agrícola
+
+A aba **Recomendação (IA)** tem chat com ferramentas de consulta e evidências, além dos indicadores por regras disponíveis sem API. A integração usa Node.js 24.19+, Responses API e chave somente no backend.
+
+Veja [execução local, configuração, limites e builds](docs/AI_ASSISTANT.md) e o [registro de validação](docs/AI_VALIDATION.md). Comece com `npm.cmd ci`, copie `.env.example` para `.env`, configure a chave localmente e execute `data:build`, `api:dev` e `dev` em dois terminais, conforme o guia.
+
 FrontEnd do AgroInsight, desenvolvido com React, TypeScript e Vite.
 
 ## Pré-requisitos

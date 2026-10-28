@@ -1,13 +1,14 @@
 ﻿import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import { AgroContext } from '../../data/agroContext'
 import type { AgroContextValue, Dataset, Filters } from '../../data/agroContext'
 import { countSeries, filterSeries } from '../../data/selectors'
 import { formatNumber } from '../../core/utils/format'
 import Shell from '../shell/shell'
 import { buildRecommendationAnalysis } from './recommendationMessages'
+import * as aiClient from './aiClient'
 
 const readData = (file: string) => JSON.parse(readFileSync(resolve(`public/data/${file}.json`), 'utf8'))
 const data: Dataset = {
@@ -22,14 +23,16 @@ const item = (analysis: ReturnType<typeof buildRecommendationAnalysis>, id: stri
 afterEach(() => { vi.restoreAllMocks(); window.location.hash = '' })
 
 describe('Recomendação (IA)', () => {
-  it('abre no menu com apenas os cards de ações fundamentadas, sem sorteio', () => {
+  it('abre no menu com análise explícita e indicadores por regras, sem chamada automática ao modelo', async () => {
+    vi.spyOn(aiClient, 'getAiStatus').mockResolvedValue({ configured: true, dataReady: true, datasetVersion: data.manifest.generatedAt, message: null })
+    const assist = vi.spyOn(aiClient, 'assist')
     window.location.hash = '#/recomendacao-ia'
     const context: AgroContextValue = {
       data, filters, status: 'ready', error: null, isFiltered: false,
       availableRange: { from: filters.from, to: filters.to },
       reload: vi.fn(), setPeriod: vi.fn(), toggleTrap: vi.fn(), togglePest: vi.fn(), resetFilters: vi.fn(),
     }
-    const { container, rerender } = render(<AgroContext.Provider value={context}><Shell /></AgroContext.Provider>)
+    const { container, rerender } = await act(async () => render(<AgroContext.Provider value={context}><Shell /></AgroContext.Provider>))
     const links = within(screen.getByRole('navigation', { name: 'Navegacao principal' })).getAllByRole('link')
     expect(links.at(-1)).toHaveTextContent('Recomendação (IA)')
     expect(links.at(-1)).toHaveAttribute('aria-current', 'page')
@@ -40,7 +43,12 @@ describe('Recomendação (IA)', () => {
     expect(container.querySelectorAll('.recommendations__metric')).toHaveLength(0)
     const actions = Array.from(container.querySelectorAll('.recommendations__item'), (node) => node.textContent)
     expect(actions).toHaveLength(6)
-    expect(screen.getAllByRole('link', { name: /Consultar dados/ })).toHaveLength(6)
+    expect(screen.getAllByRole('link', { name: /Consultar dados/ })).toHaveLength(4)
+    expect(screen.getAllByRole('link', { name: /Abrir histórico de operações/ })).toHaveLength(2)
+    expect(screen.getByRole('heading', { name: 'Análise por IA' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled()
+    expect(assist).not.toHaveBeenCalled()
     rerender(<AgroContext.Provider value={{ ...context, filters: { ...filters } }}><Shell /></AgroContext.Provider>)
     expect(Array.from(container.querySelectorAll('.recommendations__item'), (node) => node.textContent)).toEqual(actions)
   })

@@ -1,4 +1,4 @@
-﻿import type { Dataset, Filters } from '../../data/agroContext'
+import type { Dataset, Filters } from '../../shared/agroContracts'
 import type { MachineOperationSummary } from '../../data/types'
 import { climateContext, countSeries, detectionsByPest, filterSeries } from '../../data/selectors'
 import { formatDay, formatNumber, formatPercent } from '../../core/utils/format'
