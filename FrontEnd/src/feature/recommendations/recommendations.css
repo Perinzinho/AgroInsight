@@ -1,0 +1,19 @@
+﻿.recommendations { display: flex; flex-direction: column; gap: 16px; }
+.recommendations__heading h2 { margin: 0; color: var(--color-text-primary); font-size: 22px; font-weight: 650; line-height: 1.3; letter-spacing: -.3px; }
+.recommendations__heading p { margin: 5px 0 0; color: var(--color-text-secondary); font-size: 13px; line-height: 1.6; }
+.recommendations__list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.recommendations__item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); }
+.recommendations__priority { display: grid; place-items: center; flex: 0 0 28px; height: 26px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.recommendations__priority--1 { color: var(--color-danger); background: var(--color-overlay-red); }
+.recommendations__priority--2 { color: var(--color-yellow-dark); background: var(--color-overlay-yellow); }
+.recommendations__priority--3 { color: var(--color-green-dark); background: var(--color-overlay-green); }
+.recommendations__item-body { flex: 1; min-width: 0; }
+.recommendations__item h3 { margin: 2px 0 5px; color: var(--color-text-primary); font-size: 14px; font-weight: 650; line-height: 1.4; }
+.recommendations__message { margin: 0; color: var(--color-text-secondary); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.recommendations__item-footer { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.recommendations__item-footer small { color: var(--color-text-muted); font-size: 11px; overflow-wrap: anywhere; }
+.recommendations__item-footer a { flex-shrink: 0; color: var(--color-green-dark); font-size: 12px; font-weight: 600; }
+.recommendations__item-footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.recommendations__scope { margin: 0; color: var(--color-text-secondary); font-size: 12px; line-height: 1.6; }
+.recommendations__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width: 600px) { .recommendations__item { padding: 14px; gap: 10px; } .recommendations__item-footer { flex-direction: column; gap: 4px; } }
