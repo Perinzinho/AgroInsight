@@ -18,7 +18,9 @@ describe('snapshot e configuração', () => {
   it('resolve dados contra FrontEnd e rejeita portas reservadas/configuração inválida', () => {
     expect(readConfig({}).dataDir).toBe(resolve(appRoot, 'public/data'))
     for (const port of ['4200', '8000', 'NaN', '0']) expect(() => readConfig({ AI_PORT: port })).toThrow()
-    expect(() => readConfig({ AI_HOST: '0.0.0.0' })).toThrow()
+    expect(readConfig({}).AI_HOST).toBe('127.0.0.1')
+    expect(readConfig({ AI_HOST: '0.0.0.0' }).AI_HOST).toBe('0.0.0.0')
+    expect(() => readConfig({ AI_HOST: 'external.example' })).toThrow()
     expect(() => readConfig({ AI_MAX_TOOL_CALLS: '0' })).toThrow()
   })
   it('reutiliza snapshot e substitui apenas após validação completa', async () => {

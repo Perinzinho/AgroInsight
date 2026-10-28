@@ -1,5 +1,9 @@
 # AgroInsight — FrontEnd
 
+## Executar com Docker
+
+Na **raiz do repositório**, execute `docker compose up --build -d` e abra **http://localhost:5174/**. O Compose inicia o frontend e a API juntos, sem precisar de Node/npm no computador. Veja o [guia do Docker](../docker/README.md).
+
 ## Assistente de análise agrícola
 
 A aba **Recomendação (IA)** tem chat com ferramentas de consulta e evidências, além dos indicadores por regras disponíveis sem API. A integração usa Node.js 24.19+, Responses API e chave somente no backend.

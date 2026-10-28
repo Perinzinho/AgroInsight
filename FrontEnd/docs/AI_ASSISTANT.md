@@ -2,6 +2,8 @@
 
 A rota `#/recomendacao-ia` oferece **Análise por IA** e mantém as seis ações em **Indicadores por regras**. O modelo só é chamado após **Analisar período**, **Enviar**, clique numa pergunta ou nova tentativa explícita. A consulta de status não chama o provedor.
 
+Para iniciar frontend e API juntos com containers, execute `docker compose up --build -d` na raiz do repositório. Veja o [guia do Docker](../../docker/README.md).
+
 ## Executar do zero no Windows
 
 Requisitos: Node.js **24.19.0 ou superior**, npm e os CSVs da raiz do repositório. No PowerShell, use `npm.cmd`.
@@ -41,7 +43,7 @@ Abra `http://127.0.0.1:5174/#/recomendacao-ia`. Configure a chave antes de inici
 | --- | --- | --- |
 | `OPENAI_API_KEY` | vazio | Chave apenas no servidor |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | Modelo com Responses, ferramentas e saída estruturada |
-| `AI_HOST` | `127.0.0.1` | Somente loopback: `127.0.0.1`, `localhost` ou `::1` |
+| `AI_HOST` | `127.0.0.1` | `127.0.0.1`, `localhost`, `::1` ou `0.0.0.0` para a rede do container; no Compose, somente o proxy web publica uma porta local |
 | `AI_PORT` | `5175` | Porta da API e destino do proxy |
 | `AI_TIMEOUT_MS` | `60000` | Tempo total do turno, incluindo leitura dos dados |
 | `AI_MAX_OUTPUT_TOKENS` | `2000` | Saída máxima por chamada |

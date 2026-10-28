@@ -1,0 +1,17 @@
+.git
+.tools
+.agents
+.codex
+.aws
+.impeccable
+BackEnd
+**/node_modules
+**/dist
+**/dist-server
+**/dist-ssr
+**/coverage
+**/.env*
+**/*.local
+**/*.log
+**/*.tsbuildinfo
+FrontEnd/public/data
