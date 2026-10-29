@@ -17,7 +17,7 @@ export default function Recommendations() {
         <h2 id="recommendations-title">Recomendações</h2>
         <p>Ações priorizadas a partir dos dados de {analysis.period}.</p>
       </header>
-      {data && <AiConversation key={scope} filters={filters} datasetVersion={data.manifest.generatedAt} contextChanged={initialScope !== scope} onReload={reload} />}
+      {data && <AiConversation filters={filters} datasetVersion={data.manifest.generatedAt} contextChanged={initialScope !== scope} onReload={reload} />}
       <h3>Indicadores por regras</h3>
       <ol className="recommendations__list">
         {analysis.recommendations.map((item) => (

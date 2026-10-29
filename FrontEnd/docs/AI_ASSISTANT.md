@@ -2,6 +2,18 @@
 
 A rota `#/recomendacao-ia` oferece **Análise por IA** e mantém as seis ações em **Indicadores por regras**. O modelo só é chamado após **Analisar período**, **Enviar**, clique numa pergunta ou nova tentativa explícita. A consulta de status não chama o provedor.
 
+## Escolher o provedor e o modelo
+
+A interface permite escolher **Gemini** ou **OpenRouter** e um modelo do catálogo. Configure `GEMINI_API_KEY` e/ou `OPENROUTER_API_KEY` apenas no servidor. `AI_DEFAULT_PROVIDER` define a preferência inicial; se não estiver configurado, o servidor prefere outro provedor com chave. OpenAI permanece como opção quando `OPENAI_API_KEY` estiver configurada.
+
+O endpoint `GET /api/ai/models?provider=gemini` (ou `openrouter`) consulta somente metadados, sem gerar respostas. O backend usa as APIs oficiais com cache de cinco minutos. No Gemini, lista modelos de geração de texto, excluindo variantes dedicadas a imagem, áudio e outras modalidades. No OpenRouter, filtra modelos com saída de texto e suporte declarado a ferramentas. O catálogo não garante acesso, saldo ou compatibilidade de todas as opções de cada modelo; falhas são tratadas sem trocar de provedor/modelo silenciosamente. **Atualizar modelos** repete a leitura de metadados, respeitando o cache. Sem chave, exibe somente o modelo padrão configurado e bloqueia análises.
+
+Trocar provedor ou modelo cancela a análise pendente e inicia outra conversa. Cada envio congela `selection: { provider, model }`; o backend rejeita modelos fora do catálogo e devolve a seleção efetivamente usada. A interface rejeita respostas com seleção divergente e mostra o provedor/modelo junto da análise. As escolhas e conversas ficam na memória da página.
+
+Gemini usa o endpoint de Chat Completions compatível do Google; OpenRouter usa seu endpoint de Chat Completions. Ambos consultam as mesmas ferramentas e entregam a resposta final por `responderAnalise`, uma função de saída que não executa consultas nem ações. O servidor valida os argumentos dessa saída contra o mesmo schema e o registro de evidências. Mensagens brutas do assistente, assinaturas de pensamento e metadados de raciocínio são preservados apenas durante o turno no backend. Eles não aparecem na resposta pública. O caminho anterior da OpenAI continua usando Responses.
+
+Referências oficiais: [compatibilidade do Gemini](https://ai.google.dev/gemini-api/docs/openai), [catálogo Gemini](https://ai.google.dev/api/models), [ferramentas no OpenRouter](https://openrouter.ai/docs/guides/features/tool-calling) e [catálogo OpenRouter](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties).
+
 Para iniciar frontend e API juntos com containers, execute `docker compose up --build -d` na raiz do repositório. Veja o [guia do Docker](../../docker/README.md).
 
 ## Executar do zero no Windows
@@ -14,7 +26,7 @@ npm.cmd ci
 Copy-Item .env.example .env
 ```
 
-Preencha `OPENAI_API_KEY` em `.env` localmente, ou defina a variável no ambiente do servidor. Não envie a chave ao chat, Git, `public/` ou variáveis `VITE_*`. Sem chave, a API inicia normalmente e informa `AI_NOT_CONFIGURED` na análise; os indicadores por regras continuam funcionando.
+Preencha `GEMINI_API_KEY` e/ou `OPENROUTER_API_KEY` em `.env` localmente, ou defina as variáveis no ambiente do servidor. Não envie chaves ao chat, Git, `public/` ou variáveis `VITE_*`. Sem chave do provedor selecionado, a API informa `AI_NOT_CONFIGURED`; os indicadores por regras continuam funcionando.
 
 Gere os dados antes de iniciar qualquer análise:
 
@@ -41,6 +53,11 @@ Abra `http://127.0.0.1:5174/#/recomendacao-ia`. Configure a chave antes de inici
 
 | Variável | Padrão | Uso |
 | --- | --- | --- |
+| `AI_DEFAULT_PROVIDER` | `gemini` | Preferência inicial: `gemini`, `openrouter` ou `openai` |
+| `GEMINI_API_KEY` | vazio | Chave Google apenas no servidor |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Modelo inicial; se ausente do catálogo, usa a primeira opção disponível |
+| `OPENROUTER_API_KEY` | vazio | Chave OpenRouter apenas no servidor |
+| `OPENROUTER_MODEL` | `openai/gpt-4.1-mini` | Modelo inicial no formato `provedor/modelo` |
 | `OPENAI_API_KEY` | vazio | Chave apenas no servidor |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | Modelo com Responses, ferramentas e saída estruturada |
 | `AI_HOST` | `127.0.0.1` | `127.0.0.1`, `localhost`, `::1` ou `0.0.0.0` para a rede do container; no Compose, somente o proxy web publica uma porta local |
@@ -75,7 +92,7 @@ As consultas usam os seletores e o motor de limiares existentes. Rankings e sér
 
 O histórico envia somente perguntas e resumos curtos, sem reenviar respostas estruturadas completas. `js-tiktoken` conta o contexto serializado com `o200k_base`, compatível com o modelo inicial, reservando 512 tokens para enquadramento do protocolo. É uma estimativa de entrada; o uso efetivo retornado pela API é registrado. Se trocar para modelo com outro tokenizer, ajuste essa contagem e reavalie o orçamento. O custo depende de todas as chamadas e tokens do turno, não há preço fixo por conversa.
 
-O SDK usa `maxRetries: 0` e `store: false`. Isso não é promessa de retenção zero de todos os dados do serviço. Itens de ferramentas e raciocínio necessários são preservados na continuação do mesmo turno. Ao atingir o limite de ferramentas, o backend tenta finalizar com os fatos já recebidos se ainda houver orçamento. Não há cache de análises ou conversas globais.
+O SDK usa `maxRetries: 0`. O caminho Responses da OpenAI usa `store: false`. Isso não é promessa de retenção zero de todos os dados dos serviços. Itens de ferramentas e raciocínio necessários são preservados na continuação do mesmo turno. Ao atingir o limite de ferramentas, o backend tenta finalizar com os fatos já recebidos se ainda houver orçamento. Não há cache de análises ou conversas globais.
 
 O modelo produz somente `answer`. O servidor valida schema, prioridades e referências e resolve valores/fontes/URLs por um registro próprio. Evidências calculadas mas não enviadas ao modelo não podem ser citadas. Todos os links usam uma allowlist de rotas. O React renderiza texto, sem HTML ou Markdown arbitrário.
 

@@ -23,6 +23,10 @@
 .ai-conversation__heading h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 18px; }
 .ai-conversation__heading p { margin: 6px 0; color: var(--color-text-secondary); max-width: 70ch; }
 .ai-conversation__scope { font-size: 12px; color: var(--color-text-secondary); }
+.ai-conversation__settings { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin: 16px 0; }
+.ai-conversation__settings label { display: flex; flex: 1 1 180px; min-width: 0; flex-direction: column; gap: 6px; }
+.ai-conversation__settings select { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--color-border-strong); border-radius: 7px; background: var(--color-surface); color: var(--color-text-primary); font: inherit; }
+.ai-conversation__settings select:focus-visible { outline: 2px solid var(--color-green-dark); outline-offset: 3px; }
 .ai-conversation button { min-height: 40px; max-width: 100%; padding: 8px 14px; border: 1px solid var(--color-border-strong); border-radius: 7px; background: var(--color-sage); color: var(--color-green-dark); font-weight: 600; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
 .ai-conversation button:hover:enabled { background: var(--color-surface-elevated); }
 .ai-conversation button:disabled { cursor: default; opacity: .6; }

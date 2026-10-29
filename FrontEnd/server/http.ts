@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { randomUUID } from 'node:crypto'
-import { assistRequestSchema } from '../src/shared/aiContracts'
+import { assistRequestSchema, providerIdSchema } from '../src/shared/aiContracts'
 import type { AiAssistResponse } from '../src/shared/aiContracts'
 import type { Dataset } from '../src/shared/agroContracts'
 import type { Config } from './config'
@@ -11,6 +11,8 @@ import { createProvider } from './ai/client'
 import type { Provider } from './ai/client'
 import { runAgent } from './ai/agent'
 import type { TurnUsage } from './ai/agent'
+import { availableProviders, createModelStore, defaultSelection, providerSettings } from './ai/models'
+import type { ModelStore } from './ai/models'
 
 export function validateFilters(data: Dataset, request: ReturnType<typeof assistRequestSchema.parse>) {
   const traps = new Set(data.traps.traps.map((trap) => trap.trapCode))
@@ -69,11 +71,11 @@ function abortable<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
   })
 }
 export function createAiServer(config: Config, options: {
-  provider?: Provider; store?: { get(): Promise<Dataset> }; log?: (record: Record<string, unknown>) => void;
+  provider?: Provider; models?: ModelStore; store?: { get(): Promise<Dataset> }; log?: (record: Record<string, unknown>) => void;
 } = {}) {
   const store = options.store ?? createDatasetStore(config.dataDir)
   const log = options.log ?? ((record) => console.info(JSON.stringify(record)))
-  let provider = options.provider
+  const models = options.models ?? createModelStore(config)
   let active = 0
   const clients = new Map<string, { count: number; reset: number }>()
   const server = createServer(async (req, res) => {
@@ -89,12 +91,21 @@ export function createAiServer(config: Config, options: {
     let status = 200
     try {
       if (!localRequest(req)) throw new PublicError('INVALID_REQUEST', 'Origem ou host não permitido.', 403)
+      const url = new URL(req.url ?? '/', 'http://localhost')
+      if (req.method === 'GET' && url.pathname === '/api/ai/models') {
+        const id = providerIdSchema.safeParse(url.searchParams.get('provider'))
+        if (!id.success || [...url.searchParams.keys()].some((key) => key !== 'provider')) throw new PublicError('INVALID_REQUEST', 'Escolha um provedor válido.', 400)
+        json(res, 200, await abortable(models.list(id.data, controller.signal), controller.signal))
+        return
+      }
       if (req.method === 'GET' && req.url === '/api/ai/status') {
         let data: Dataset | undefined
         try { data = await abortable(store.get(), controller.signal) } catch { /* Status remains available without local data. */ }
         controller.signal.throwIfAborted()
-        json(res, 200, { configured: Boolean(config.OPENAI_API_KEY), dataReady: Boolean(data), datasetVersion: data?.manifest.generatedAt ?? null,
-          message: !data ? 'Gere os dados locais antes de analisar.' : !config.OPENAI_API_KEY ? 'A análise por IA ainda não está configurada. Os indicadores por regras continuam disponíveis.' : null })
+        const providers = availableProviders(config)
+        const configured = providers.some((provider) => provider.configured)
+        json(res, 200, { configured, providers, defaultSelection: defaultSelection(config), dataReady: Boolean(data), datasetVersion: data?.manifest.generatedAt ?? null,
+          message: !data ? 'Gere os dados locais antes de analisar.' : !configured ? 'A análise por IA ainda não está configurada. Os indicadores por regras continuam disponíveis.' : null })
         return
       }
       if (req.url !== '/api/ai/assist' || req.method !== 'POST') throw new PublicError('NOT_FOUND', 'Endpoint não encontrado.', 404)
@@ -114,8 +125,12 @@ export function createAiServer(config: Config, options: {
       active++; slot = true
       const data = await abortable(store.get(), controller.signal)
       validateFilters(data, request)
-      if (!config.OPENAI_API_KEY) throw new PublicError('AI_NOT_CONFIGURED', 'A análise por IA ainda não está configurada. Os indicadores por regras continuam disponíveis.', 503)
-      provider ??= createProvider(config)
+      const selection = request.selection ?? defaultSelection(config)
+      if (!providerSettings(config, selection.provider).key) throw new PublicError('AI_NOT_CONFIGURED', 'O provedor selecionado ainda não está configurado no servidor. Os indicadores por regras continuam disponíveis.', 503)
+      const catalog = await abortable(models.list(selection.provider, controller.signal), controller.signal)
+      if (!catalog.models.some((model) => model.id === selection.model)) throw new PublicError('INVALID_MODEL', 'O modelo não está disponível para esse provedor. Atualize a lista e escolha outro modelo.', 400)
+      request.selection = selection
+      const provider = options.provider ?? createProvider(config, selection)
       controller.signal.throwIfAborted()
       const response: AiAssistResponse = await abortable(runAgent({ request, dataset: data, config, provider, signal: controller.signal, requestId, usage }), controller.signal)
       json(res, 200, response)

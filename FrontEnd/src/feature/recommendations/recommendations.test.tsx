@@ -25,6 +25,7 @@ afterEach(() => { vi.restoreAllMocks(); window.location.hash = '' })
 describe('Recomendação (IA)', () => {
   it('abre no menu com análise explícita e indicadores por regras, sem chamada automática ao modelo', async () => {
     vi.spyOn(aiClient, 'getAiStatus').mockResolvedValue({ configured: true, dataReady: true, datasetVersion: data.manifest.generatedAt, message: null })
+    vi.spyOn(aiClient, 'getAiModels').mockResolvedValue({ provider: 'openai', defaultModel: 'gpt-4.1-mini', models: [{ id: 'gpt-4.1-mini', name: 'GPT' }] })
     const assist = vi.spyOn(aiClient, 'assist')
     window.location.hash = '#/recomendacao-ia'
     const context: AgroContextValue = {

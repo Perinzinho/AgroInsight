@@ -7,6 +7,7 @@ import { assistRequestSchema } from '../../src/shared/aiContracts'
 import { readConfig } from '../config'
 import { createAiServer } from '../http'
 import type { Provider } from '../ai/client'
+import type { ModelStore } from '../ai/models'
 import { finalResponse, loadData, requestFor, toolResponse } from './helpers'
 
 let dataset: Dataset
@@ -15,9 +16,9 @@ beforeAll(async () => { dataset = await loadData() })
 afterEach(async () => {
   await Promise.all(servers.splice(0).map((server) => new Promise<void>((resolve) => { server.closeAllConnections(); server.close(() => resolve()) })))
 })
-async function start(env: NodeJS.ProcessEnv = {}, provider?: Provider, store = { get: async () => dataset }) {
+async function start(env: NodeJS.ProcessEnv = {}, provider?: Provider, store = { get: async () => dataset }, models?: ModelStore) {
   const records: Record<string, unknown>[] = []
-  const server = createAiServer(readConfig({ OPENAI_API_KEY: 'test-key-never-log', ...env }), { provider, store, log: (record) => records.push(record) })
+  const server = createAiServer(readConfig({ OPENAI_API_KEY: 'test-key-never-log', ...env }), { provider, models, store, log: (record) => records.push(record) })
   servers.push(server)
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -29,6 +30,45 @@ async function start(env: NodeJS.ProcessEnv = {}, provider?: Provider, store = {
   }) }
 }
 describe('API HTTP local', () => {
+  it('status e modelos informam configuração sem consumir uma análise', async () => {
+    const create = vi.fn<Provider['create']>()
+    const list = vi.fn<ModelStore['list']>().mockResolvedValue({ provider: 'gemini', defaultModel: 'gemini-test', models: [{ id: 'gemini-test', name: 'Gemini' }] })
+    const api = await start({ GEMINI_API_KEY: 'private-gemini', OPENROUTER_API_KEY: 'private-router' }, { create }, undefined, { list })
+    const status = await fetch(`${api.url}/api/ai/status`).then((r) => r.json())
+    expect(status).toMatchObject({ defaultSelection: { provider: 'gemini' }, providers: expect.arrayContaining([
+      { id: 'gemini', configured: true, defaultModel: 'gemini-3.8-flash' },
+    ]) })
+    expect(JSON.stringify(status)).not.toMatch(/private-gemini|private-router|test-key-never-log/)
+    expect((await fetch(`${api.url}/api/ai/models?provider=gemini`)).status).toBe(200)
+    expect((await fetch(`${api.url}/api/ai/models?provider=unknown`)).status).toBe(400)
+    expect(list).toHaveBeenCalledTimes(1)
+    expect(create).not.toHaveBeenCalled()
+  })
+  it('encaminha o modelo escolhido e retorna sua identificação em cada resposta', async () => {
+    const create = vi.fn<Provider['create']>().mockResolvedValueOnce(toolResponse()).mockResolvedValueOnce(finalResponse())
+      .mockResolvedValueOnce(toolResponse()).mockResolvedValueOnce(finalResponse())
+    const list: ModelStore['list'] = async (provider) => ({ provider, defaultModel: `${provider}-test`, models: [{ id: `${provider}-test`, name: 'Modelo' }] })
+    const api = await start({ GEMINI_API_KEY: 'test', OPENROUTER_API_KEY: 'test' }, { create }, undefined, { list })
+    for (const provider of ['gemini', 'openrouter'] as const) {
+      const selection = { provider, model: `${provider}-test` }
+      const result = await api.post({ ...requestFor(dataset.manifest.generatedAt), selection })
+      expect(result.status).toBe(200)
+      expect(await result.json()).toMatchObject({ selection })
+    }
+    expect(create.mock.calls.map(([params]) => params.model)).toEqual(['gemini-test', 'gemini-test', 'openrouter-test', 'openrouter-test'])
+    const invalid = await api.post({ ...requestFor(dataset.manifest.generatedAt), selection: { provider: 'gemini', model: 'not-listed' } })
+    expect(invalid.status).toBe(400)
+    expect(await invalid.json()).toMatchObject({ error: { code: 'INVALID_MODEL' } })
+    expect(create).toHaveBeenCalledTimes(4)
+  })
+  it('chave de outro provedor não habilita a escolha sem configuração', async () => {
+    const create = vi.fn<Provider['create']>()
+    const api = await start({}, { create })
+    const response = await api.post({ ...requestFor(dataset.manifest.generatedAt), selection: { provider: 'gemini', model: 'gemini-test' } })
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({ error: { code: 'AI_NOT_CONFIGURED' } })
+    expect(create).not.toHaveBeenCalled()
+  })
   it('sem chave mantém status e rejeita análise sem chamar o provedor', async () => {
     const create = vi.fn<Provider['create']>()
     const api = await start({ OPENAI_API_KEY: '' }, { create })

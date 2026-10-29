@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Filters } from '../../shared/agroContracts'
-import type { AiAssistResponse, AiStatus, AssistRequest } from '../../shared/aiContracts'
-import { AiClientError, assist, getAiStatus } from './aiClient'
+import type { AiAssistResponse, AiSelection, AssistRequest } from '../../shared/aiContracts'
+import { AiClientError, assist } from './aiClient'
 
 export type ConversationMessage = { role: 'user'; content: string } | { role: 'assistant'; response: AiAssistResponse }
-export function useAiAssistant(filters: Filters, datasetVersion: string) {
+export function useAiAssistant(filters: Filters, datasetVersion: string, selection: AiSelection) {
   const [messages, setMessages] = useState<ConversationMessage[]>([])
-  const [status, setStatus] = useState<AiStatus | null>(null)
-  const [checkingStatus, setCheckingStatus] = useState(true)
-  const [statusAttempt, setStatusAttempt] = useState(0)
   const [error, setError] = useState<AiClientError | null>(null)
   const [pending, setPending] = useState(false)
   const [notice, setNotice] = useState('')
@@ -20,19 +17,6 @@ export function useAiAssistant(filters: Filters, datasetVersion: string) {
     mounted.current = true
     return () => { mounted.current = false; running.current?.abort(); running.current = null }
   }, [])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    getAiStatus(controller.signal).then((value) => {
-      if (mounted.current && !controller.signal.aborted) setStatus(value)
-    }).catch(() => {
-      if (mounted.current && !controller.signal.aborted) setStatus({ configured: false, dataReady: false, datasetVersion: null,
-        message: 'A API local está indisponível. Inicie o backend; os indicadores por regras continuam disponíveis.' })
-    }).finally(() => {
-      if (mounted.current && !controller.signal.aborted) setCheckingStatus(false)
-    })
-    return () => controller.abort()
-  }, [statusAttempt])
 
   async function execute(request: AssistRequest, appendUser: boolean) {
     if (running.current) return
@@ -65,7 +49,7 @@ export function useAiAssistant(filters: Filters, datasetVersion: string) {
         : []
     }).slice(-12)
     while (history.reduce((sum, item) => sum + item.content.length, 0) > 12000) history.splice(0, 2)
-    void execute({ mode, message: message?.trim(), filters: structuredClone(filters), datasetVersion, history }, true)
+    void execute({ mode, message: message?.trim(), filters: structuredClone(filters), datasetVersion, history, selection: { ...selection } }, true)
   }
   function cancel() {
     running.current?.abort(); running.current = null
@@ -74,11 +58,6 @@ export function useAiAssistant(filters: Filters, datasetVersion: string) {
   function clear() {
     cancel(); setMessages([]); setError(null); setNotice('Conversa limpa.'); lastRequest.current = null
   }
-  function refreshStatus() {
-    if (checkingStatus) return
-    setCheckingStatus(true)
-    setStatusAttempt((value) => value + 1)
-  }
-  return { messages, status, checkingStatus, error, pending, notice, send, cancel, clear, refreshStatus,
+  return { messages, error, pending, notice, send, cancel, clear,
     retry: () => { if (lastRequest.current) void execute(lastRequest.current, false) } }
 }

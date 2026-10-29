@@ -1,5 +1,4 @@
 import { zodTextFormat } from 'openai/helpers/zod'
-import { getEncoding } from 'js-tiktoken'
 import type { ResponseInput, ResponseInputItem } from 'openai/resources/responses/responses'
 import type { AssistRequest, AiAssistResponse } from '../../src/shared/aiContracts'
 import { answerSchema, assistResponseSchema } from '../../src/shared/aiContracts'
@@ -12,9 +11,9 @@ import { providerError } from './client'
 import { createQueries } from './queries'
 import { instructions } from './instructions'
 import { dispatchTool, toolDefinitions } from './tools'
+import { estimateInputTokens } from './tokenBudget'
 
 export interface TurnUsage { providerCalls: number; toolCalls: number; inputTokens: number; outputTokens: number }
-const tokenizer = getEncoding('o200k_base')
 const answerFormat = zodTextFormat(answerSchema, 'agroinsight_answer')
 export async function runAgent(args: {
   request: AssistRequest; dataset: Dataset; config: Config; provider: Provider;
@@ -43,11 +42,11 @@ export async function runAgent(args: {
       signal.throwIfAborted()
       if (performance.now() >= deadline) throw new PublicError('AI_TIMEOUT', 'A análise excedeu o tempo disponível.', 504, true)
       // GPT-4.1 tokenizer, with room for protocol framing; provider usage remains authoritative.
-      const estimatedTokens = tokenizer.encode(JSON.stringify({ instructions, input, tools: toolDefinitions, schema: answerFormat.schema })).length + 512
+      const estimatedTokens = estimateInputTokens({ instructions, input, tools: toolDefinitions, schema: answerFormat.schema })
       if (estimatedTokens > config.AI_MAX_INPUT_TOKENS) throw new PublicError('CONTEXT_LIMIT', 'O contexto atingiu o orçamento desta análise. Limpe a conversa ou reduza o período.', 413, true)
       usage.providerCalls++
       const response = await provider.create({
-        model: config.OPENAI_MODEL, store: false, instructions, input,
+        model: request.selection?.model ?? config.OPENAI_MODEL, store: false, instructions, input,
         tools: toolDefinitions, tool_choice: forceFinal ? 'none' : usage.toolCalls === 0 ? 'required' : 'auto',
         parallel_tool_calls: false, max_output_tokens: config.AI_MAX_OUTPUT_TOKENS,
         text: { format: answerFormat },
@@ -88,7 +87,7 @@ export async function runAgent(args: {
       const ids = result.data.findings.flatMap((finding) => finding.evidenceIds)
       const evidence = registry.resolve(['coverage', ...ids])
       const answer = { ...result.data, findings: [...result.data.findings].sort((a, b) => a.priority - b.priority) }
-      return assistResponseSchema.parse({ requestId, generatedAt: new Date().toISOString(), datasetVersion: dataset.manifest.generatedAt,
+      return assistResponseSchema.parse({ requestId, selection: request.selection ?? { provider: 'openai', model: config.OPENAI_MODEL }, generatedAt: new Date().toISOString(), datasetVersion: dataset.manifest.generatedAt,
         effectiveFilters: f, answer, evidence })
     }
     throw new PublicError('AI_LIMIT_REACHED', 'A análise atingiu o limite de consultas. Faça uma pergunta mais específica.', 429, true)

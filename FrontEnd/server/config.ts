@@ -10,6 +10,11 @@ const integer = (fallback: number, max: number) => z.coerce.number().int().min(1
 const envSchema = z.object({
   OPENAI_API_KEY: z.string().trim().default(''),
   OPENAI_MODEL: z.string().trim().min(1).default('gpt-4.1-mini'),
+  GEMINI_API_KEY: z.string().trim().default(''),
+  GEMINI_MODEL: z.string().trim().min(1).default('gemini-3.8-flash'),
+  OPENROUTER_API_KEY: z.string().trim().default(''),
+  OPENROUTER_MODEL: z.string().trim().min(1).default('openai/gpt-4.1-mini'),
+  AI_DEFAULT_PROVIDER: z.enum(['gemini', 'openrouter', 'openai']).default('gemini'),
   // Containers listen on their network interface; Compose publishes only the local web proxy.
   AI_HOST: z.enum(['127.0.0.1', '::1', 'localhost', '0.0.0.0']).default('127.0.0.1'),
   AI_PORT: integer(5175, 65535).refine((port) => ![4200, 8000].includes(port), 'Porta reservada a outro projeto'),
