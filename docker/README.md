@@ -12,7 +12,7 @@ Abra **http://localhost:5174/** ou diretamente **http://localhost:5174/#/recomen
 
 ## Configurar a IA (opcional)
 
-A aplicação funciona sem chave, com os indicadores por regras. Para habilitar a análise por IA, crie ou edite `.env` **na raiz** com base em [`.env.example`](../.env.example), preenchendo `OPENAI_API_KEY` localmente. Se `.env` já existir, preserve os valores atuais.
+A aplicação permite consultar os painéis de dados sem chave. Os indicadores e as recomendações da aba **Recomendação (IA)** são gerados pelo modelo após **Analisar período**. Para habilitar a IA, crie ou edite `.env` **na raiz** com base em [`.env.example`](../.env.example), preenchendo `GEMINI_API_KEY` ou `OPENROUTER_API_KEY` localmente. A integração existente com `OPENAI_API_KEY` também é aceita. Se `.env` já existir, preserve os valores atuais. Selecione provedor e modelo na aba **Recomendação (IA)**; listas de modelos adicionais usam `GEMINI_MODELS`, `OPENROUTER_MODELS` e `OPENAI_MODELS`, separadas por vírgulas.
 
 O serviço da API lê `FrontEnd/.env` e depois `.env` da raiz; valores da raiz prevalecem. Os arquivos são opcionais. A chave entra apenas no ambiente da API durante a execução; arquivos `.env` são excluídos do contexto de build. Os limites `AI_*` estão descritos no [guia do assistente](../FrontEnd/docs/AI_ASSISTANT.md).
 

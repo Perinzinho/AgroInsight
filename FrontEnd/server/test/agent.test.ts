@@ -18,6 +18,26 @@ function run(provider: Provider, env: NodeJS.ProcessEnv = {}) {
     config: readConfig({ OPENAI_API_KEY: 'test-only', ...env }), signal: new AbortController().signal, requestId: 'test-request', usage: usageFor() })
 }
 describe('ciclo da Responses API', () => {
+  it('aceita uma visão geral maior sem cortar o texto nem mudar as evidências', async () => {
+    const summary = 'Panorama do período com contexto e prioridades. '.repeat(48)
+    const create = vi.fn<Provider['create']>().mockResolvedValueOnce(toolResponse()).mockResolvedValueOnce(finalResponse({ ...answer, summary }))
+    const result = await run({ create })
+    expect(summary.length).toBeGreaterThan(1600)
+    expect(result.answer.summary).toBe(summary)
+    expect(result.evidence.some((item) => item.id === 'climate-rain')).toBe(true)
+  })
+  it('analisa todo o período com as cinco consultas juntas sem exceder o orçamento padrão', async () => {
+    const calls = [['consultarResumo', '{}'], ['consultarPragas', '{}'], ['consultarClima', '{}'], ['consultarOperacoes', '{"kind":"both"}'], ['consultarAlertasMaquina', '{}']]
+    const create = vi.fn<Provider['create']>().mockResolvedValueOnce(response(calls.flatMap(([name, args], index) => toolResponse(name, args, `full-${index}`).output)))
+      .mockResolvedValueOnce(finalResponse()).mockResolvedValueOnce(finalResponse())
+    const request = requestFor(dataset.manifest.generatedAt)
+    request.filters = { from: '2025-08-01', to: '2026-02-25', trapCodes: [], pestKeys: [] }
+    const result = await runAgent({ request, dataset, provider: { create, separateFinal: true }, config: readConfig({}),
+      signal: new AbortController().signal, requestId: 'full-period', usage: usageFor() })
+    expect(result.effectiveFilters).toEqual(request.filters)
+    expect(result.evidence.find((item) => item.id === 'climate-rain')?.value).toBeCloseTo(dataset.climate.days.reduce((sum, day) => sum + day.precipitation, 0))
+    expect(create).toHaveBeenCalledTimes(3)
+  })
   it('síntese completa e consultas especializadas cabem no orçamento padrão', async () => {
     for (const [name, args] of [['consultarResumo', '{}'], ['consultarPragas', '{}'], ['consultarOperacoes', '{"kind":"both"}'], ['consultarAlertasMaquina', '{}']]) {
       const create = vi.fn<Provider['create']>().mockResolvedValueOnce(toolResponse(name, args)).mockResolvedValueOnce(finalResponse({ ...answer, findings: [] }))

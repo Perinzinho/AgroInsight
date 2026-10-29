@@ -44,6 +44,39 @@ describe('API HTTP local', () => {
     const response = await fetch(`${api.url}/api/ai/status`)
     expect(await response.json()).toMatchObject({ configured: true, dataReady: false, datasetVersion: null })
   })
+  it('expõe apenas catálogo público e usa o provedor/modelo selecionados', async () => {
+    const create = vi.fn<Provider['create']>().mockResolvedValueOnce(toolResponse()).mockResolvedValueOnce(finalResponse())
+    const api = await start({ OPENAI_API_KEY: '', OPENROUTER_API_KEY: 'private-router-key' }, { create })
+    const status = await fetch(`${api.url}/api/ai/status`).then((result) => result.json())
+    expect(status).toMatchObject({ configured: true, defaultSelection: { provider: 'openrouter', model: 'google/gemini-2.5-flash' },
+      providers: expect.arrayContaining([expect.objectContaining({ id: 'openrouter', configured: true })]) })
+    expect(JSON.stringify(status)).not.toContain('private-router-key')
+    const result = await api.post({ ...requestFor(dataset.manifest.generatedAt), provider: 'openrouter', model: 'openai/gpt-4.1-mini' })
+    expect(result.status).toBe(200)
+    expect(await result.json()).toHaveProperty('selection', { provider: 'openrouter', model: 'openai/gpt-4.1-mini' })
+    expect(create.mock.calls[0][0].model).toBe('openai/gpt-4.1-mini')
+    expect(api.records.at(-1)).toMatchObject({ provider: 'openrouter', model: 'openai/gpt-4.1-mini', inputTokenLimit: 12000, maxEstimatedInputTokens: expect.any(Number) })
+  })
+  it('bloqueia provedor sem chave e modelo não autorizado antes de consumir a API', async () => {
+    const create = vi.fn<Provider['create']>()
+    const api = await start({}, { create })
+    const body = requestFor(dataset.manifest.generatedAt)
+    expect((await api.post({ ...body, provider: 'gemini', model: 'gemini-3.8-flash' })).status).toBe(503)
+    expect((await api.post({ ...body, provider: 'openai', model: 'unknown-expensive-model' })).status).toBe(400)
+    expect(create).not.toHaveBeenCalled()
+  })
+  it('registra a etapa de validação sem expor o conteúdo rejeitado', async () => {
+    const rejected = 'private-model-text-'.repeat(200)
+    const create = vi.fn<Provider['create']>().mockResolvedValueOnce(toolResponse()).mockResolvedValueOnce(finalResponse({
+      summary: rejected, findings: [], limitations: [], followUpQuestions: [],
+    }))
+    const api = await start({}, { create })
+    const response = await api.post(requestFor(dataset.manifest.generatedAt))
+    expect(response.status).toBe(502)
+    expect(await response.json()).toMatchObject({ error: { code: 'INVALID_AI_RESPONSE' } })
+    expect(api.records.at(-1)).toMatchObject({ diagnostic: { stage: 'schema', fields: ['summary'] } })
+    expect(JSON.stringify(api.records)).not.toContain('private-model-text')
+  })
   it('faz análise real do endpoint com provedor injetado e logs sem dados privados', async () => {
     const create = vi.fn<Provider['create']>().mockResolvedValueOnce(toolResponse()).mockResolvedValueOnce(finalResponse())
     const api = await start({}, { create })
@@ -71,6 +104,7 @@ describe('API HTTP local', () => {
     { filters: { from: '2026-02-19', to: '2026-02-25', trapCodes: ['unknown'], pestKeys: [] } },
     { filters: { from: '2026-02-19', to: '2026-02-25', trapCodes: [], pestKeys: ['unknown'] } },
     { message: 'x'.repeat(2001) }, { mode: 'chat', message: ' ' }, { dataset: {} }, { system: 'override' },
+    { provider: 'gemini' }, { model: 'gemini-3.8-flash' }, { provider: 'unknown', model: 'test' },
   ])('rejeita entrada inválida antes do provedor: %j', async (changes) => {
     const create = vi.fn<Provider['create']>()
     const api = await start({}, { create })

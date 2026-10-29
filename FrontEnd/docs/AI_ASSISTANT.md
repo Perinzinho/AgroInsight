@@ -1,6 +1,8 @@
 # Assistente de análise local
 
-A rota `#/recomendacao-ia` oferece **Análise por IA** e mantém as seis ações em **Indicadores por regras**. O modelo só é chamado após **Analisar período**, **Enviar**, clique numa pergunta ou nova tentativa explícita. A consulta de status não chama o provedor.
+A rota `#/recomendacao-ia` oferece **Análise por IA** e **Indicadores por IA**. Os cartões usam os achados da última análise concluída: títulos, prioridades, explicações e ações são gerados pelo modelo; valores e fontes são resolvidos pelas evidências validadas no servidor. O antigo gerador de seis recomendações fixas foi removido. O modelo só é chamado após **Analisar período**, **Enviar**, clique numa pergunta ou nova tentativa explícita. A consulta de status não chama o provedor.
+
+Os indicadores são preenchidos ao clicar em **Analisar período**. Perguntas do chat podem apresentar achados na conversa e não substituem os indicadores da análise geral. Sem resposta válida, o bloco permanece vazio; uma resposta válida sem achados informa essa ausência. Nova tentativa com falha não substitui uma análise já concluída. Limpar a conversa ou mudar filtros, base, provedor ou modelo descarta os indicadores anteriores.
 
 Para iniciar frontend e API juntos com containers, execute `docker compose up --build -d` na raiz do repositório. Veja o [guia do Docker](../../docker/README.md).
 
@@ -14,7 +16,9 @@ npm.cmd ci
 Copy-Item .env.example .env
 ```
 
-Preencha `OPENAI_API_KEY` em `.env` localmente, ou defina a variável no ambiente do servidor. Não envie a chave ao chat, Git, `public/` ou variáveis `VITE_*`. Sem chave, a API inicia normalmente e informa `AI_NOT_CONFIGURED` na análise; os indicadores por regras continuam funcionando.
+Preencha `GEMINI_API_KEY` ou `OPENROUTER_API_KEY` em `.env` localmente, ou defina a variável no ambiente do servidor. A integração anterior com `OPENAI_API_KEY` continua aceita. Não envie a chave ao chat, Git, `public/` ou variáveis `VITE_*`. Sem chave, a API inicia normalmente e informa `AI_NOT_CONFIGURED` na análise; os demais painéis de dados continuam disponíveis e os indicadores por IA aguardam configuração.
+
+Na aba **Recomendação (IA)**, escolha **Provedor de IA** e **Modelo** antes de analisar ou perguntar. Provedores sem chave são identificados e bloqueiam os envios até serem configurados. A troca cancela o trabalho pendente e inicia uma conversa vazia. A preferência fica no `localStorage` do navegador; perguntas e respostas continuam apenas em memória. A seleção válida é preservada ao mudar os filtros ou recarregar a página.
 
 Gere os dados antes de iniciar qualquer análise:
 
@@ -41,8 +45,16 @@ Abra `http://127.0.0.1:5174/#/recomendacao-ia`. Configure a chave antes de inici
 
 | Variável | Padrão | Uso |
 | --- | --- | --- |
+| `AI_PROVIDER` | primeiro configurado | Padrão opcional: `gemini`, `openrouter` ou `openai`; sem essa variável, prioridade Gemini → OpenRouter → OpenAI |
+| `GEMINI_API_KEY` | vazio | Chave Gemini apenas no servidor |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Modelo inicial do Gemini |
+| `GEMINI_MODELS` | `gemini-3.8-flash,gemini-3.5-flash-lite` | Modelos permitidos na interface, separados por vírgulas |
+| `OPENROUTER_API_KEY` | vazio | Chave OpenRouter apenas no servidor |
+| `OPENROUTER_MODEL` | `google/gemini-2.5-flash` | Modelo inicial do OpenRouter |
+| `OPENROUTER_MODELS` | `google/gemini-2.5-flash,openai/gpt-4.1-mini` | Modelos permitidos no OpenRouter, com o prefixo do fornecedor |
 | `OPENAI_API_KEY` | vazio | Chave apenas no servidor |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | Modelo com Responses, ferramentas e saída estruturada |
+| `OPENAI_MODELS` | vazio | Modelos adicionais da integração existente |
 | `AI_HOST` | `127.0.0.1` | `127.0.0.1`, `localhost`, `::1` ou `0.0.0.0` para a rede do container; no Compose, somente o proxy web publica uma porta local |
 | `AI_PORT` | `5175` | Porta da API e destino do proxy |
 | `AI_TIMEOUT_MS` | `60000` | Tempo total do turno, incluindo leitura dos dados |
@@ -56,6 +68,8 @@ Abra `http://127.0.0.1:5174/#/recomendacao-ia`. Configure a chave antes de inici
 | `AI_DATA_DIR` | `./public/data` | Diretório administrativo do snapshot |
 
 Todos os números são inteiros positivos com tetos validados em `server/config.ts`. Pergunta: até 2.000 caracteres. Histórico: até 12 mensagens de usuário/assistente e 12.000 caracteres. Corpo: até 64 KiB. Período: datas reais, inclusivas, até 366 dias. IDs desconhecidos, campos extras e papéis privilegiados são rejeitados antes do provedor.
+
+Cada `*_MODEL` é incluído automaticamente na lista do respectivo provedor, sem duplicação. As listas são administradas no servidor, com até 100 modelos por provedor; a interface não carrega um catálogo externo nem consulta saldo. Use modelos que suportem ferramentas e JSON Schema. Reinicie a API após alterar o `.env`. O backend rejeita modelos fora da lista antes de qualquer chamada externa e nunca muda de provedor/modelo automaticamente durante uma análise. As URLs das APIs são fixas no servidor.
 
 ## Economia de tokens e fluxo de evidências
 
@@ -73,16 +87,24 @@ O contexto inicial contém fuso, dia atual da propriedade, filtros, cobertura e 
 
 As consultas usam os seletores e o motor de limiares existentes. Rankings e séries têm até dez itens, com total e indicação de truncamento; agregados usam todos os registros filtrados. Cada domínio informa observações, cobertura, unidades, escopo, limitações e evidências. Ausência de cobertura não vira chuva ou detecção zero medida.
 
-O histórico envia somente perguntas e resumos curtos, sem reenviar respostas estruturadas completas. `js-tiktoken` conta o contexto serializado com `o200k_base`, compatível com o modelo inicial, reservando 512 tokens para enquadramento do protocolo. É uma estimativa de entrada; o uso efetivo retornado pela API é registrado. Se trocar para modelo com outro tokenizer, ajuste essa contagem e reavalie o orçamento. O custo depende de todas as chamadas e tokens do turno, não há preço fixo por conversa.
+As saídas são compactadas por turno: fontes, escopos e períodos repetidos ficam em `evidenceContexts`, e fatos já enviados são referenciados pelo ID. Todos os valores, amostras, contagens e limitações são preservados. Os filtros congelados permanecem no contexto inicial. Essa compactação evita reenviar as mesmas evidências quando o modelo consulta o resumo e as quatro ferramentas especializadas. Uma análise do período completo calcula totais sobre todos os dias com dados; as listas limitadas não são uma análise individual de cada dia.
 
-O SDK usa `maxRetries: 0` e `store: false`. Isso não é promessa de retenção zero de todos os dados do serviço. Itens de ferramentas e raciocínio necessários são preservados na continuação do mesmo turno. Ao atingir o limite de ferramentas, o backend tenta finalizar com os fatos já recebidos se ainda houver orçamento. Não há cache de análises ou conversas globais.
+O histórico envia somente perguntas e resumos curtos, sem reenviar respostas estruturadas completas. `js-tiktoken` estima o conteúdo com `o200k_base`, contando textos e resultados de ferramentas sem o escape adicional do JSON de transporte, reservando 512 tokens globais e 32 por item para enquadramento. Para Gemini/OpenRouter, a estimativa inclui as definições das ferramentas durante a consulta e o schema durante a finalização, conforme o conteúdo de cada chamada. Esse tokenizer é uma aproximação para Gemini e outros modelos; não impõe um teto exato aos tokens faturados. O uso efetivo retornado por cada provedor é registrado. Reavalie os orçamentos ao trocar de modelo. O custo depende de todas as chamadas e tokens do turno, não há preço fixo por conversa.
+
+O SDK usa `maxRetries: 0`; a integração OpenAI usa Responses com `store: false`. Gemini e OpenRouter usam Chat Completions, sem enviar parâmetros exclusivos de Responses. Isso não é promessa de retenção zero de todos os dados dos serviços. Itens de ferramentas e extensões de raciocínio/assinaturas são preservados na continuação do mesmo turno, sem publicá-los ao navegador. Gemini usa `reasoning_effort: low`. No OpenRouter, `provider.require_parameters: true` exige endpoints que aceitem os recursos solicitados.
+
+Para Gemini/OpenRouter, a consulta de ferramentas e a finalização com JSON Schema ocorrem em etapas separadas para acomodar modelos que não aceitam os dois modos juntos. Se o modelo indicar que terminou de consultar, uma chamada adicional solicita a resposta estruturada; ela conta nos mesmos limites de tempo, chamadas e tokens. Ao atingir o limite de ferramentas, o backend tenta finalizar com os fatos já recebidos se ainda houver orçamento. Não há cache de análises ou conversas globais.
 
 O modelo produz somente `answer`. O servidor valida schema, prioridades e referências e resolve valores/fontes/URLs por um registro próprio. Evidências calculadas mas não enviadas ao modelo não podem ser citadas. Todos os links usam uma allowlist de rotas. O React renderiza texto, sem HTML ou Markdown arbitrário.
 
+As instruções pedem profundidade proporcional à pergunta: análises e comparações devem apresentar números, unidades, datas e identificadores disponíveis, explicar a importância dos achados e indicar verificações concretas. O modelo deve consultar ferramentas especializadas quando a síntese não fornecer detalhe suficiente. Perguntas simples podem receber respostas curtas; a orientação anterior de ser breve para economizar tokens foi removida. Os limites de consumo e a validação de evidências continuam aplicados.
+
+**Analisar período** usa uma orientação própria para uma síntese executiva: três parágrafos curtos (aproximadamente 150 a 220 palavras quando houver dados), cobrindo panorama, principais sinais e prioridades/próximos passos. A resposta integra os domínios disponíveis e menciona lacunas, sem descrever cada dia. Os cartões trazem preferencialmente três a cinco prioridades sustentadas, sem quantidade obrigatória quando faltam dados. `summary` aceita até 3.200 caracteres; explicações e ações individuais continuam limitadas a 1.600. Essa extensão orienta o modelo, sem impor um tamanho mínimo a respostas sobre períodos sem cobertura.
+
 ## API e estados
 
-- `GET /api/ai/status`: configuração local, disponibilidade da base, `datasetVersion` e mensagem; não testa saldo ou acesso ao modelo.
-- `POST /api/ai/assist`: `mode`, `message`, `filters`, `datasetVersion`, `history`; retorna resposta estruturada, evidências e filtros efetivos.
+- `GET /api/ai/status`: configuração local, disponibilidade da base, `datasetVersion`, mensagem, `providers` (ID, nome, configurado, modelos e modelo inicial) e `defaultSelection`; não revela chaves nem testa saldo ou acesso ao modelo.
+- `POST /api/ai/assist`: `mode`, `message`, `filters`, `datasetVersion`, `history`, `provider`, `model`; retorna resposta estruturada, evidências, filtros efetivos e `selection` com o provedor/modelo utilizados. `provider` e `model` devem vir juntos; clientes antigos que omitem os dois usam o padrão do servidor. O frontend confere se a seleção retornada corresponde à solicitada.
 - Erros públicos têm `requestId`, `error.code`, `error.message` e `error.retryable`. Dados inválidos: 400; versão diferente: 409; corpo/contexto grande: 413; limites: 429; configuração/dados/autenticação/cota: 503; falha externa ou resposta inválida: 502; timeout: 504.
 - O marcador de compatibilidade é `manifest.generatedAt`; não é hash do conteúdo nem data de medição. Versão divergente é rejeitada antes de chamar o modelo.
 - Cancelar, sair da rota ou mudar filtros/versão aborta o trabalho pendente. Respostas antigas são ignoradas mesmo se o aborto chegar tarde. O processamento já realizado pode ser cobrado.
@@ -90,7 +112,7 @@ O modelo produz somente `answer`. O servidor valida schema, prioridades e refer�
 - Apenas trocas concluídas entram no histórico da próxima consulta; perguntas com falha ou canceladas continuam visíveis, sem serem reenviadas como contexto. A nova tentativa explícita repete a requisição original.
 - **Verificar disponibilidade** consulta somente o status local, sem chamar o modelo, recarregar os dados ou limpar a conversa.
 
-Logs contêm apenas identificador da requisição, latência, status, chamadas e uso de tokens. Não contêm chave, corpo de pergunta ou dados completos. O servidor aceita somente host/origem locais e JSON, sem CORS aberto.
+Logs contêm identificador da requisição, latência, status, provedor/modelo, código público de erro, etapa/campos de validação, chamadas, uso de tokens, maior estimativa de entrada e orçamento configurado. Não contêm chave, corpo de pergunta ou conteúdo da resposta rejeitada. O servidor aceita somente host/origem locais e JSON, sem CORS aberto.
 
 ## Limites agronômicos
 
@@ -130,3 +152,5 @@ Para executar o artefato com somente dependências de produção, gere os artefa
 Os mocks de teste nunca aparecem como IA na aplicação. Sem chave configurada, a chamada externa e a qualidade semântica do modelo ficam pendentes. Use o [roteiro revisável de avaliação](AI_VALIDATION.md) após configurar a chave localmente. Não publique sem definir acesso aos dados, hospedagem e orçamento da equipe.
 
 Referências oficiais usadas na implementação: [function calling](https://developers.openai.com/api/docs/guides/function-calling), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [estado e armazenamento](https://developers.openai.com/api/docs/guides/migrate-to-responses) e [autenticação](https://developers.openai.com/api/reference/overview#authentication).
+
+Integrações adicionais: [compatibilidade OpenAI do Gemini](https://ai.google.dev/gemini-api/docs/openai), [modelos Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash) e [3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite), [saídas estruturadas do OpenRouter](https://openrouter.ai/docs/guides/features/structured-outputs) e [seleção de endpoints](https://openrouter.ai/docs/guides/routing/provider-selection). A disponibilidade depende da conta e pode mudar; ajuste as listas no servidor quando necessário.

@@ -10,9 +10,19 @@ Validação executada: 170 testes do frontend e 62 do servidor passaram, assim c
 
 ## Verificações automatizadas
 
+### Continuação em 29/10/2026
+
+Os cartões de recomendações agora usam somente os achados da análise válida da IA. Foram removidos os seis textos/prioridades determinados pelo gerador local. O bloco aguarda **Analisar período**; respostas do chat não substituem a análise geral e falhas não criam cartões. Os testes conferem os textos/prioridades retornados pelo modelo, fontes, estados vazio/pendente/erro, ausência de achados e descarte ao mudar filtros ou modelo.
+
+Corrigido o limite de contexto com compactação de metadados/evidências repetidas e contagem dos textos sem o escape do JSON de transporte. O teste local cobre as cinco consultas juntas no período completo, preservando todos os valores e limitações. Logs agora identificam provedor/modelo, estimativa de entrada e etapa/campos de validação, sem conteúdo privado.
+
+Com autorização explícita do usuário, uma análise real com `gemini-3.5-flash-lite`, sem histórico, cobrindo **22/08/2025 a 25/02/2026**, todas as armadilhas e pragas, retornou HTTP 200 em aproximadamente **41,3 s**, três achados e cinco evidências. Foram três chamadas ao provedor e uma consulta de dados, com 6.987 tokens de entrada e 1.603 de saída acumulados; a maior estimativa local de contexto foi 4.763, abaixo do limite de 12.000. A validação confirmou schema, IDs e filtros; a revisão agronômica/semântica continua pendente. Uma tentativa anterior havia retornado resposta inválida; esse erro não se repetiu neste teste e continua sujeito à validação e nova tentativa explícita.
+
+Verificação final: **177 testes do frontend e 83 do servidor**, builds do frontend/API e checagem de tipos concluídos. A API local foi reiniciada com as mudanças. A segunda análise adicional autorizada não foi utilizada após o teste bem-sucedido.
+
 Os testes do servidor cobrem contagens contra os seletores e JSONs reais; filtros; null versus zero; cobertura; datas locais; variação sem base; OS com lacunas e cobertura parcial; pressão e doses; limiares e limitações; severidade; cache/snapshot; validação HTTP; versão divergente; ausência de chave; limites; cancelamento; falhas de provedor; recusa; saída incompleta; IDs inexistentes; preservação de `call_id` e itens de raciocínio; orçamento de contexto e logs sem segredo.
 
-Os testes da interface cobrem rota e menu; ausência de chamada paga automática; envio por botão/Enter; Shift+Enter e composição; sugestões; duplicidade; fontes; falha/nova tentativa; cancelamento; unmount; limpeza; troca de filtros/versão com resposta tardia; allowlist de links; fallback por regras.
+Os testes da interface cobrem rota e menu; ausência de chamada paga automática; envio por botão/Enter; Shift+Enter e composição; sugestões; duplicidade; fontes; falha/nova tentativa; cancelamento; unmount; limpeza; troca de filtros/versão com resposta tardia; allowlist de links; indicadores gerados somente a partir da análise válida da IA, sem preencher cartões por regras locais.
 
 ## Roteiro manual após configurar chave
 

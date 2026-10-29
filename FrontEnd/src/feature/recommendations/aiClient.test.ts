@@ -26,6 +26,16 @@ describe('cliente HTTP da análise', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ...output, datasetVersion: 'v2' }) }))
     await expect(assist(request, new AbortController().signal)).rejects.toMatchObject({ code: 'DATASET_CHANGED' })
   })
+  it('confere o provedor/modelo retornado e envia a escolha no corpo', async () => {
+    const selection = { provider: 'openrouter' as const, model: 'openai/gpt-4.1-mini' }
+    const selectedRequest = { ...request, ...selection }
+    const fetcher = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ ...output, selection }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ ...output, selection: { ...selection, model: 'other' } }) })
+    vi.stubGlobal('fetch', fetcher)
+    await expect(assist(selectedRequest, new AbortController().signal)).resolves.toHaveProperty('selection', selection)
+    expect(fetcher.mock.calls[0][1].body).toBe(JSON.stringify(selectedRequest))
+    await expect(assist(selectedRequest, new AbortController().signal)).rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
+  })
   it('trata indisponibilidade e JSON de erro controlado', async () => {
     const fetcher = vi.fn().mockResolvedValueOnce({ ok: false }).mockResolvedValueOnce({ ok: false, json: async () => ({ error: { code: 'AI_NOT_CONFIGURED', message: 'Não configurada.', retryable: false } }) })
     vi.stubGlobal('fetch', fetcher)

@@ -3,13 +3,24 @@ import { loadEnvFile } from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { z } from 'zod'
+import { aiModelSchema, aiProviderSchema } from '../src/shared/aiContracts.js'
 
 // Source and compiled entry are each one directory below FrontEnd.
 export const appRoot = fileURLToPath(new URL('../', import.meta.url))
 const integer = (fallback: number, max: number) => z.coerce.number().int().min(1).max(max).default(fallback)
+const modelList = (fallback: string) => z.string().default(fallback).transform((value) => value.split(',').map((model) => model.trim()).filter(Boolean))
+  .pipe(z.array(aiModelSchema).max(99))
 const envSchema = z.object({
+  AI_PROVIDER: aiProviderSchema.optional(),
+  GEMINI_API_KEY: z.string().trim().default(''),
+  GEMINI_MODEL: aiModelSchema.default('gemini-3.8-flash'),
+  GEMINI_MODELS: modelList('gemini-3.8-flash,gemini-3.5-flash-lite'),
+  OPENROUTER_API_KEY: z.string().trim().default(''),
+  OPENROUTER_MODEL: aiModelSchema.default('google/gemini-2.5-flash'),
+  OPENROUTER_MODELS: modelList('google/gemini-2.5-flash,openai/gpt-4.1-mini'),
   OPENAI_API_KEY: z.string().trim().default(''),
-  OPENAI_MODEL: z.string().trim().min(1).default('gpt-4.1-mini'),
+  OPENAI_MODEL: aiModelSchema.default('gpt-4.1-mini'),
+  OPENAI_MODELS: modelList(''),
   // Containers listen on their network interface; Compose publishes only the local web proxy.
   AI_HOST: z.enum(['127.0.0.1', '::1', 'localhost', '0.0.0.0']).default('127.0.0.1'),
   AI_PORT: integer(5175, 65535).refine((port) => ![4200, 8000].includes(port), 'Porta reservada a outro projeto'),

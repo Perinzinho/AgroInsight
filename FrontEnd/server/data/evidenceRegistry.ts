@@ -11,7 +11,7 @@ export class EvidenceRegistry {
   resolve(ids: string[]) {
     return [...new Set(ids)].map((id) => {
       const entry = this.entries.get(id)
-      if (!entry) throw invalidResponse()
+      if (!entry) throw invalidResponse('evidence')
       return entry
     })
   }

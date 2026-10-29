@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useAgro } from '../../data/agroContext'
-import { buildRecommendationAnalysis } from './recommendationMessages'
+import { formatDay } from '../../core/utils/format'
 import AiConversation from './aiConversation'
 import './recommendations.css'
 
@@ -8,33 +8,15 @@ export default function Recommendations() {
   const { data, filters, reload } = useAgro()
   const scope = JSON.stringify([data?.manifest.generatedAt, filters.from, filters.to, [...filters.trapCodes].sort(), [...filters.pestKeys].sort()])
   const [initialScope] = useState(scope)
-  const analysis = useMemo(() => data ? buildRecommendationAnalysis(data, filters) : null, [data, filters])
-  if (!analysis) return null
+  if (!data) return null
 
   return (
     <section className="recommendations" aria-labelledby="recommendations-title">
       <header className="recommendations__heading">
         <h2 id="recommendations-title">Recomendações</h2>
-        <p>Ações priorizadas a partir dos dados de {analysis.period}.</p>
+        <p>Recomendações geradas pela IA a partir dos dados de {formatDay(filters.from)} a {formatDay(filters.to)}.</p>
       </header>
-      {data && <AiConversation key={scope} filters={filters} datasetVersion={data.manifest.generatedAt} contextChanged={initialScope !== scope} onReload={reload} />}
-      <h3>Indicadores por regras</h3>
-      <ol className="recommendations__list">
-        {analysis.recommendations.map((item) => (
-          <li className="recommendations__item" key={item.id}>
-            <span className={`recommendations__priority recommendations__priority--${item.priority}`} aria-label={`Prioridade ${item.priority}`}>P{item.priority}</span>
-            <div className="recommendations__item-body">
-              <h3>{item.title}</h3>
-              <p className="recommendations__message">{item.evidence} {item.action}</p>
-              <div className="recommendations__item-footer">
-                <small>Fonte: {item.source}</small>
-                <a href={item.href}>{item.href === '#/operacoes' ? 'Abrir histórico de operações' : 'Consultar dados'} <span aria-hidden="true">→</span><span className="recommendations__sr-only">: {item.title}</span></a>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
-      {analysis.partialOperations && <p className="recommendations__scope">As ordens de serviço selecionadas são analisadas por seus totais completos, incluindo trechos fora do período.</p>}
+      <AiConversation key={scope} filters={filters} datasetVersion={data.manifest.generatedAt} contextChanged={initialScope !== scope} onReload={reload} />
       {(filters.trapCodes.length > 0 || filters.pestKeys.length > 0) && <p className="recommendations__scope">Os filtros de armadilha e praga se aplicam às detecções. Clima e operações seguem o período.</p>}
     </section>
   )

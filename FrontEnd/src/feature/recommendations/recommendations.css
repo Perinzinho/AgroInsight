@@ -8,7 +8,7 @@
 .recommendations__priority--2 { color: var(--color-yellow-dark); background: var(--color-overlay-yellow); }
 .recommendations__priority--3 { color: var(--color-green-dark); background: var(--color-overlay-green); }
 .recommendations__item-body { flex: 1; min-width: 0; }
-.recommendations__item h3 { margin: 2px 0 5px; color: var(--color-text-primary); font-size: 14px; font-weight: 650; line-height: 1.4; }
+.recommendations__item h4 { margin: 2px 0 5px; color: var(--color-text-primary); font-size: 14px; font-weight: 650; line-height: 1.4; }
 .recommendations__message { margin: 0; color: var(--color-text-secondary); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
 .recommendations__item-footer { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .recommendations__item-footer small { color: var(--color-text-muted); font-size: 11px; overflow-wrap: anywhere; }
@@ -23,6 +23,11 @@
 .ai-conversation__heading h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 18px; }
 .ai-conversation__heading p { margin: 6px 0; color: var(--color-text-secondary); max-width: 70ch; }
 .ai-conversation__scope { font-size: 12px; color: var(--color-text-secondary); }
+.ai-conversation__settings { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; margin: 16px 0; }
+.ai-conversation__settings > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ai-conversation__settings select { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--color-border-strong); border-radius: 8px; background: var(--color-surface); color: var(--color-text-primary); font: inherit; }
+.ai-conversation__settings select:focus-visible { outline: 2px solid var(--color-green-dark); outline-offset: 3px; }
+@media (max-width: 600px) { .ai-conversation__settings { grid-template-columns: minmax(0, 1fr); } }
 .ai-conversation button { min-height: 40px; max-width: 100%; padding: 8px 14px; border: 1px solid var(--color-border-strong); border-radius: 7px; background: var(--color-sage); color: var(--color-green-dark); font-weight: 600; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
 .ai-conversation button:hover:enabled { background: var(--color-surface-elevated); }
 .ai-conversation button:disabled { cursor: default; opacity: .6; }
@@ -34,8 +39,10 @@
 .ai-conversation__user { margin-left: clamp(0px, 4vw, 40px); background: var(--color-sage); }
 .ai-conversation__messages p { white-space: pre-wrap; margin: 8px 0; }
 .ai-conversation__messages small { display: block; color: var(--color-text-secondary); }
-.ai-conversation__finding { border-top: 1px solid var(--color-border); margin-top: 14px; padding-top: 10px; }
-.ai-conversation__finding h4 { margin: 0; }
+.ai-conversation__indicators { border-top: 1px solid var(--color-border); margin-top: 24px; padding-top: 16px; }
+.ai-conversation__indicators h3 { margin: 0 0 8px; font-size: 18px; }
+.ai-conversation .recommendations__list { padding-left: 0; }
+.recommendations__evidence { margin: 12px 0 0; }
 .ai-conversation ul { padding-left: 20px; }
 .ai-conversation li { margin-bottom: 8px; }
 .ai-conversation a { color: var(--color-green-dark); text-decoration: underline; text-underline-offset: 3px; }

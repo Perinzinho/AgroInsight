@@ -1,14 +1,14 @@
-﻿import { readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { AgroContext } from '../../data/agroContext'
 import type { AgroContextValue, Dataset, Filters } from '../../data/agroContext'
-import { countSeries, filterSeries } from '../../data/selectors'
-import { formatNumber } from '../../core/utils/format'
+import type { AiAssistResponse } from '../../shared/aiContracts'
 import Shell from '../shell/shell'
-import { buildRecommendationAnalysis } from './recommendationMessages'
+import Recommendations from './recommendations'
 import * as aiClient from './aiClient'
+import { aiStatusFor } from '../../test/aiFixtures'
 
 const readData = (file: string) => JSON.parse(readFileSync(resolve(`public/data/${file}.json`), 'utf8'))
 const data: Dataset = {
@@ -18,83 +18,105 @@ const data: Dataset = {
   machineAlerts: readData('machine-alerts'), stopReasons: readData('stop-reasons'),
 }
 const filters: Filters = { from: '2025-08-01', to: '2026-02-25', trapCodes: [], pestKeys: [] }
-const item = (analysis: ReturnType<typeof buildRecommendationAnalysis>, id: string) => analysis.recommendations.find((entry) => entry.id === id)!
-
+const context: AgroContextValue = {
+  data, filters, status: 'ready', error: null, isFiltered: false,
+  availableRange: { from: filters.from, to: filters.to },
+  reload: vi.fn(), setPeriod: vi.fn(), toggleTrap: vi.fn(), togglePest: vi.fn(), resetFilters: vi.fn(),
+}
+const response = (): AiAssistResponse => ({
+  requestId: 'ai-indicators', generatedAt: '2026-10-29T12:00:00Z', datasetVersion: data.manifest.generatedAt, effectiveFilters: filters,
+  selection: { provider: 'gemini', model: 'gemini-2.5-flash' },
+  answer: { summary: 'Análise produzida pelo modelo.', findings: [{ id: 'model-finding', priority: 3, title: 'Recomendação específica da IA',
+    explanation: 'Interpretação recebida do modelo.', suggestedAction: 'Verificação escolhida pelo modelo.', evidenceIds: ['rain'], limitations: ['Cobertura histórica.'] }],
+    limitations: ['Sem previsão.'], followUpQuestions: [] },
+  evidence: [{ id: 'rain', label: 'Chuva', value: 12.5, unit: 'mm', source: 'Estação de teste', href: '#/clima', from: filters.from, to: filters.to, scope: 'Período selecionado' }],
+})
+const view = (value = context) => <AgroContext.Provider value={value}><Recommendations /></AgroContext.Provider>
+const indicators = () => within(screen.getByRole('region', { name: 'Indicadores por IA' }))
+async function ready() {
+  const result = render(view())
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled())
+  return result
+}
+beforeEach(() => {
+  localStorage.clear()
+  vi.spyOn(aiClient, 'getAiStatus').mockResolvedValue(aiStatusFor(data.manifest.generatedAt))
+  vi.spyOn(aiClient, 'assist').mockResolvedValue(response())
+})
 afterEach(() => { vi.restoreAllMocks(); window.location.hash = '' })
 
-describe('Recomendação (IA)', () => {
-  it('abre no menu com análise explícita e indicadores por regras, sem chamada automática ao modelo', async () => {
-    vi.spyOn(aiClient, 'getAiStatus').mockResolvedValue({ configured: true, dataReady: true, datasetVersion: data.manifest.generatedAt, message: null })
-    const assist = vi.spyOn(aiClient, 'assist')
+describe('indicadores gerados pela IA', () => {
+  it('abre pelo menu sem indicadores prontos nem consulta automática ao modelo', async () => {
     window.location.hash = '#/recomendacao-ia'
-    const context: AgroContextValue = {
-      data, filters, status: 'ready', error: null, isFiltered: false,
-      availableRange: { from: filters.from, to: filters.to },
-      reload: vi.fn(), setPeriod: vi.fn(), toggleTrap: vi.fn(), togglePest: vi.fn(), resetFilters: vi.fn(),
-    }
-    const { container, rerender } = await act(async () => render(<AgroContext.Provider value={context}><Shell /></AgroContext.Provider>))
+    await act(async () => render(<AgroContext.Provider value={context}><Shell /></AgroContext.Provider>))
     const links = within(screen.getByRole('navigation', { name: 'Navegacao principal' })).getAllByRole('link')
     expect(links.at(-1)).toHaveTextContent('Recomendação (IA)')
     expect(links.at(-1)).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('heading', { name: 'Recomendações' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Resumo da safra' })).not.toBeInTheDocument()
-    expect(screen.queryByText('Modo demonstrativo')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Gerar novas recomendações' })).not.toBeInTheDocument()
-    expect(container.querySelectorAll('.recommendations__metric')).toHaveLength(0)
-    const actions = Array.from(container.querySelectorAll('.recommendations__item'), (node) => node.textContent)
-    expect(actions).toHaveLength(6)
-    expect(screen.getAllByRole('link', { name: /Consultar dados/ })).toHaveLength(4)
-    expect(screen.getAllByRole('link', { name: /Abrir histórico de operações/ })).toHaveLength(2)
-    expect(screen.getByRole('heading', { name: 'Análise por IA' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled()
-    expect(assist).not.toHaveBeenCalled()
-    rerender(<AgroContext.Provider value={{ ...context, filters: { ...filters } }}><Shell /></AgroContext.Provider>)
-    expect(Array.from(container.querySelectorAll('.recommendations__item'), (node) => node.textContent)).toEqual(actions)
+    expect(screen.queryByRole('heading', { name: 'Indicadores por regras' })).not.toBeInTheDocument()
+    expect(indicators().queryAllByRole('listitem')).toHaveLength(0)
+    expect(aiClient.assist).not.toHaveBeenCalled()
   })
-
-  it('calcula sinais com os totais reais e não transforma pressão zero em diagnóstico', () => {
-    const analysis = buildRecommendationAnalysis(data, filters)
-    const zeroPressure = data.spray.operations.reduce((sum, operation) => sum + operation.zeroPressureSegments, 0)
-    const belowDose = data.fertilization.operations.reduce((sum, operation) => sum + operation.belowConfiguredSegments, 0)
-    const rain = data.climate.days.reduce((sum, day) => sum + day.precipitation, 0)
-    const et = data.climate.days.reduce((sum, day) => sum + day.evapotranspiration, 0)
-    expect(analysis.metrics.find((metric) => metric.id === 'pressure')?.value).toBe(formatNumber(zeroPressure))
-    expect(analysis.metrics.find((metric) => metric.id === 'dose')?.value).toBe(formatNumber(belowDose))
-    expect(analysis.metrics.find((metric) => metric.id === 'water')?.value).toBe(`${formatNumber(rain - et, 1)} mm`)
-    expect(item(analysis, 'spray').priority).toBe(1)
-    expect(item(analysis, 'spray').action).toContain('não comprova falha')
-    expect(analysis.recommendations.map((entry) => entry.priority)).toEqual([1, 1, 2, 2, 2, 2])
-    expect(item(analysis, 'quality').action).toContain('não trazem produtividade nem perda financeira')
+  it('usa títulos, prioridades, ações e evidências da resposta da IA nos cartões', async () => {
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await indicators().findByRole('heading', { name: 'Prioridade 3 · Recomendação específica da IA' })
+    expect(indicators().getByText('Interpretação recebida do modelo.')).toBeInTheDocument()
+    expect(indicators().getByText('Verificação escolhida pelo modelo.')).toBeInTheDocument()
+    expect(indicators().getByText('Cobertura histórica.')).toBeInTheDocument()
+    expect(indicators().getByLabelText('Prioridade 3')).toHaveTextContent('P3')
+    expect(indicators().getByText(/Fonte: Estação de teste/)).toBeInTheDocument()
+    expect(indicators().getByRole('link', { name: /Consultar dados/ })).toHaveAttribute('href', '#/clima')
+    expect(aiClient.assist).toHaveBeenCalledTimes(1)
+    expect(aiClient.assist).toHaveBeenCalledWith(expect.objectContaining({ mode: 'analysis', filters }), expect.any(AbortSignal))
   })
-
-  it('respeita os filtros de período, armadilha e praga nas detecções', () => {
-    const row = data.series.rows.find((entry) => entry.captures > 0 && entry.pests.some((pest) => pest.detections > 0))!
-    const pest = row.pests.find((entry) => entry.detections > 0)!
-    const selected = { ...filters, from: row.day, to: row.day, trapCodes: [row.trapCode], pestKeys: [pest.pestKey] }
-    const analysis = buildRecommendationAnalysis(data, selected)
-    const counts = countSeries(filterSeries({ rows: data.series.rows, filters: selected }), selected.pestKeys)
-    expect(analysis.metrics[0].value).toBe(formatNumber(counts.detections))
-    expect(item(analysis, 'pests').evidence).toContain(pest.pestName)
-    expect(item(analysis, 'pests').evidence).toContain(row.trapCode)
+  it('aguarda a resposta para preencher os cartões', async () => {
+    let finish!: (value: AiAssistResponse) => void
+    vi.mocked(aiClient.assist).mockImplementation(() => new Promise((resolve) => { finish = resolve }))
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    expect(indicators().getByRole('status')).toHaveTextContent('Gerando indicadores com a IA')
+    expect(indicators().queryAllByRole('listitem')).toHaveLength(0)
+    await act(async () => finish(response()))
+    expect(indicators().getByRole('heading', { name: /Recomendação específica da IA/ })).toBeInTheDocument()
   })
-
-  it('informa ausência de cobertura sem substituir dados ausentes por zero', () => {
-    const analysis = buildRecommendationAnalysis(data, { ...filters, from: '1900-01-01', to: '1900-01-07' })
-    expect(analysis.metrics.every((metric) => metric.value === null)).toBe(true)
-    expect(analysis.recommendations.every((entry) => entry.priority === 3)).toBe(true)
-    expect(item(analysis, 'pests').evidence).toBe('Sem capturas nos filtros selecionados.')
-    expect(item(analysis, 'climate').evidence).toBe('A série climática não cobre o período selecionado.')
-    expect(item(analysis, 'machine').evidence).toContain('0 alertas')
+  it('não preenche indicadores por regras quando a IA falha', async () => {
+    vi.mocked(aiClient.assist).mockRejectedValue(new aiClient.AiClientError('INVALID_AI_RESPONSE', 'Resposta inválida.'))
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Resposta inválida.')
+    expect(indicators().queryAllByRole('listitem')).toHaveLength(0)
   })
-
-  it('não seleciona OS em lacunas e identifica totais de OS parcialmente cobertas', () => {
-    const operation = { ...data.fertilization.operations[0], days: ['2025-08-22', '2025-08-24'] }
-    const isolated = { ...data, fertilization: { ...data.fertilization, operations: [operation] }, spray: { ...data.spray, operations: [] } }
-    const gap = buildRecommendationAnalysis(isolated, { ...filters, from: '2025-08-23', to: '2025-08-23' })
-    expect(gap.metrics.find((metric) => metric.id === 'dose')?.value).toBeNull()
-    const partial = buildRecommendationAnalysis(isolated, { ...filters, from: '2025-08-22', to: '2025-08-22' })
-    expect(partial.partialOperations).toBe(true)
-    expect(item(partial, 'fertilization').evidence).toContain('Totais completos das ordens de serviço')
+  it('apresenta ausência de achados retornada pela IA sem criar cartões', async () => {
+    const empty = response()
+    empty.answer.findings = []
+    vi.mocked(aiClient.assist).mockResolvedValue(empty)
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await indicators().findByText(/A IA não identificou recomendações/)
+    expect(indicators().queryAllByRole('listitem')).toHaveLength(0)
+  })
+  it('respostas do chat não substituem os indicadores da análise do período', async () => {
+    await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await indicators().findByRole('heading', { name: /Recomendação específica da IA/ })
+    const chat = response()
+    chat.answer.findings[0].title = 'Achado da pergunta específica'
+    vi.mocked(aiClient.assist).mockResolvedValue(chat)
+    fireEvent.click(screen.getByRole('button', { name: 'Como ficou o balanço hídrico?' }))
+    await screen.findByRole('heading', { name: /Achado da pergunta específica/ })
+    expect(indicators().getByRole('heading', { name: /Recomendação específica da IA/ })).toBeInTheDocument()
+    expect(indicators().queryByRole('heading', { name: /Achado da pergunta específica/ })).not.toBeInTheDocument()
+  })
+  it('descarta os indicadores ao mudar o modelo ou os filtros', async () => {
+    const { rerender } = await ready()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await indicators().findByRole('heading', { name: /Recomendação específica da IA/ })
+    fireEvent.change(screen.getByRole('combobox', { name: 'Modelo' }), { target: { value: 'gemini-2.5-pro' } })
+    expect(indicators().queryAllByRole('listitem')).toHaveLength(0)
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await indicators().findByRole('heading', { name: /Recomendação específica da IA/ })
+    rerender(view({ ...context, filters: { ...filters, from: '2025-08-02' } }))
+    expect(indicators().queryAllByRole('listitem')).toHaveLength(0)
   })
 })

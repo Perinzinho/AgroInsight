@@ -8,6 +8,8 @@ import type { Config } from './config'
 import { createDatasetStore } from './data/loadDataset'
 import { PublicError } from './errors'
 import { createProvider } from './ai/client'
+import { defaultSelection, providerOptions, resolveSelection } from './ai/providers'
+import type { AiProviderId, AiSelection } from '../src/shared/aiContracts'
 import type { Provider } from './ai/client'
 import { runAgent } from './ai/agent'
 import type { TurnUsage } from './ai/agent'
@@ -73,7 +75,7 @@ export function createAiServer(config: Config, options: {
 } = {}) {
   const store = options.store ?? createDatasetStore(config.dataDir)
   const log = options.log ?? ((record) => console.info(JSON.stringify(record)))
-  let provider = options.provider
+  const providers = new Map<AiProviderId, Provider>()
   let active = 0
   const clients = new Map<string, { count: number; reset: number }>()
   const server = createServer(async (req, res) => {
@@ -87,14 +89,20 @@ export function createAiServer(config: Config, options: {
     res.once('close', disconnect)
     let slot = false
     let status = 200
+    let selection: AiSelection | undefined
+    let errorCode: string | undefined
+    let diagnostic: PublicError['diagnostic']
     try {
       if (!localRequest(req)) throw new PublicError('INVALID_REQUEST', 'Origem ou host não permitido.', 403)
       if (req.method === 'GET' && req.url === '/api/ai/status') {
         let data: Dataset | undefined
         try { data = await abortable(store.get(), controller.signal) } catch { /* Status remains available without local data. */ }
         controller.signal.throwIfAborted()
-        json(res, 200, { configured: Boolean(config.OPENAI_API_KEY), dataReady: Boolean(data), datasetVersion: data?.manifest.generatedAt ?? null,
-          message: !data ? 'Gere os dados locais antes de analisar.' : !config.OPENAI_API_KEY ? 'A análise por IA ainda não está configurada. Os indicadores por regras continuam disponíveis.' : null })
+        const available = providerOptions(config)
+        const configured = available.some((option) => option.configured)
+        json(res, 200, { configured, dataReady: Boolean(data), datasetVersion: data?.manifest.generatedAt ?? null,
+          providers: available, defaultSelection: defaultSelection(config),
+          message: !data ? 'Gere os dados locais antes de analisar.' : !configured ? 'Configure um provedor de IA no servidor para gerar indicadores e recomendações.' : null })
         return
       }
       if (req.url !== '/api/ai/assist' || req.method !== 'POST') throw new PublicError('NOT_FOUND', 'Endpoint não encontrado.', 404)
@@ -114,8 +122,10 @@ export function createAiServer(config: Config, options: {
       active++; slot = true
       const data = await abortable(store.get(), controller.signal)
       validateFilters(data, request)
-      if (!config.OPENAI_API_KEY) throw new PublicError('AI_NOT_CONFIGURED', 'A análise por IA ainda não está configurada. Os indicadores por regras continuam disponíveis.', 503)
-      provider ??= createProvider(config)
+      selection = resolveSelection(config, request)
+      request.provider = selection.provider; request.model = selection.model
+      let provider = options.provider ?? providers.get(selection.provider)
+      if (!provider) { provider = createProvider(config, selection.provider); providers.set(selection.provider, provider) }
       controller.signal.throwIfAborted()
       const response: AiAssistResponse = await abortable(runAgent({ request, dataset: data, config, provider, signal: controller.signal, requestId, usage }), controller.signal)
       json(res, 200, response)
@@ -123,13 +133,15 @@ export function createAiServer(config: Config, options: {
       const error = controller.signal.aborted && controller.signal.reason instanceof PublicError ? controller.signal.reason
         : cause instanceof PublicError ? cause : new PublicError('PROVIDER_ERROR', 'Não foi possível concluir a análise.', 502, true)
       status = error.status
+      errorCode = error.code
+      diagnostic = error.diagnostic
       if (status === 429) res.setHeader('Retry-After', '60')
       json(res, status, { requestId, error: { code: error.code, message: error.message, retryable: error.retryable } })
     } finally {
       clearTimeout(timeout)
       if (slot) active--
       req.off('aborted', disconnect); res.off('close', disconnect)
-      log({ requestId, latencyMs: Math.round(performance.now() - started), status, ...usage })
+      log({ requestId, latencyMs: Math.round(performance.now() - started), status, ...selection, errorCode, diagnostic, inputTokenLimit: config.AI_MAX_INPUT_TOKENS, ...usage })
     }
   })
   server.requestTimeout = 15000

@@ -7,6 +7,7 @@ import type { AgroContextValue, Dataset, Filters } from '../../data/agroContext'
 import type { AiAssistResponse } from '../../shared/aiContracts'
 import Recommendations from './recommendations'
 import { AiClientError, assist, getAiStatus } from './aiClient'
+import { aiStatusFor } from '../../test/aiFixtures'
 
 vi.mock('./aiClient', async (original) => ({ ...await original<typeof import('./aiClient')>(), assist: vi.fn(), getAiStatus: vi.fn() }))
 const read = (file: string) => JSON.parse(readFileSync(resolve(`public/data/${file}.json`), 'utf8'))
@@ -22,15 +23,71 @@ const response = (f: Filters = filters): AiAssistResponse => ({
   evidence: [{ id: 'rain', label: 'Chuva', value: 12.5, unit: 'mm', source: 'Estação de teste', href: '#/clima', from: f.from, to: f.to, scope: 'Período' }],
 })
 const view = (value = context) => <AgroContext.Provider value={value}><Recommendations /></AgroContext.Provider>
+async function renderReady() {
+  const result = render(view())
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled())
+  return result
+}
 beforeEach(() => {
-  vi.mocked(getAiStatus).mockResolvedValue({ configured: true, dataReady: true, datasetVersion: data.manifest.generatedAt, message: null })
+  localStorage.clear()
+  vi.mocked(getAiStatus).mockResolvedValue(aiStatusFor(data.manifest.generatedAt))
   vi.mocked(assist).mockImplementation(async (request) => response(request.filters))
 })
 afterEach(() => { vi.resetAllMocks() })
 
 describe('conversa de análise', () => {
+  it('carrega opções sem consultar o modelo e envia o provedor/modelo escolhido', async () => {
+    await renderReady()
+    expect(screen.getByRole('combobox', { name: 'Provedor de IA' })).toHaveValue('gemini')
+    fireEvent.change(screen.getByRole('combobox', { name: 'Modelo' }), { target: { value: 'gemini-2.5-pro' } })
+    expect(assist).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    expect(vi.mocked(assist).mock.calls[0][0]).toMatchObject({ provider: 'gemini', model: 'gemini-2.5-pro' })
+    fireEvent.change(screen.getByRole('combobox', { name: 'Provedor de IA' }), { target: { value: 'openrouter' } })
+    expect(screen.queryByText('Resumo com evidências verificadas.')).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Modelo' })).toHaveValue('google/gemini-2.5-flash')
+    expect(screen.queryByRole('option', { name: 'gemini-2.5-pro' })).not.toBeInTheDocument()
+    fireEvent.change(screen.getByRole('combobox', { name: 'Modelo' }), { target: { value: 'openai/gpt-4.1-mini' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    expect(vi.mocked(assist).mock.calls[1][0]).toMatchObject({ provider: 'openrouter', model: 'openai/gpt-4.1-mini', history: [] })
+    expect(JSON.parse(localStorage.getItem('agroinsight.ai.selection')!)).toEqual({ provider: 'openrouter', model: 'openai/gpt-4.1-mini' })
+  })
+  it('restaura a preferência válida e substitui modelos removidos do catálogo', async () => {
+    localStorage.setItem('agroinsight.ai.selection', JSON.stringify({ provider: 'openrouter', model: 'openai/gpt-4.1-mini' }))
+    const first = await renderReady()
+    expect(screen.getByRole('combobox', { name: 'Provedor de IA' })).toHaveValue('openrouter')
+    expect(screen.getByRole('combobox', { name: 'Modelo' })).toHaveValue('openai/gpt-4.1-mini')
+    first.unmount()
+    localStorage.setItem('agroinsight.ai.selection', JSON.stringify({ provider: 'gemini', model: 'removed-model' }))
+    await renderReady()
+    expect(screen.getByRole('combobox', { name: 'Modelo' })).toHaveValue('gemini-2.5-flash')
+    expect(assist).not.toHaveBeenCalled()
+  })
+  it('troca de modelo aborta a análise e ignora a resposta anterior', async () => {
+    let finish!: (value: AiAssistResponse) => void
+    vi.mocked(assist).mockImplementation(() => new Promise((resolve) => { finish = resolve }))
+    await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Modelo' }), { target: { value: 'gemini-2.5-pro' } })
+    expect(vi.mocked(assist).mock.calls[0][1].aborted).toBe(true)
+    await act(async () => finish(response()))
+    expect(screen.queryByText('Resumo com evidências verificadas.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument()
+  })
+  it('bloqueia apenas o provedor sem chave e permite voltar ao configurado', async () => {
+    await renderReady()
+    fireEvent.change(screen.getByRole('combobox', { name: 'Provedor de IA' }), { target: { value: 'openai' } })
+    expect(screen.getByRole('button', { name: 'Analisar período' })).toBeDisabled()
+    expect(screen.getByText(/Configure a chave de OpenAI/)).toBeInTheDocument()
+    fireEvent.change(screen.getByRole('combobox', { name: 'Provedor de IA' }), { target: { value: 'gemini' } })
+    expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled()
+    expect(assist).not.toHaveBeenCalled()
+  })
   it('só consulta a IA após clique e mostra fontes, período e limitações', async () => {
-    render(view())
+    await renderReady()
     await waitFor(() => expect(getAiStatus).toHaveBeenCalledTimes(1))
     expect(assist).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
@@ -39,10 +96,10 @@ describe('conversa de análise', () => {
     expect(screen.getByRole('heading', { name: 'Prioridade 2 · Chuva no período' })).toBeInTheDocument()
     expect(screen.getAllByText(/Estação de teste/).length).toBeGreaterThan(0)
     expect(screen.getByText('Sem produtividade.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Indicadores por IA' })).toBeInTheDocument()
   })
   it('envia chat com Enter, preserva Shift+Enter e não envia durante composição', async () => {
-    render(view())
+    await renderReady()
     const input = screen.getByLabelText('Pergunte sobre os registros')
     fireEvent.change(input, { target: { value: 'Choveu quanto?' } })
     fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })
@@ -57,7 +114,7 @@ describe('conversa de análise', () => {
     expect(vi.mocked(assist).mock.calls[1][0].history).toEqual([{ role: 'user', content: 'Choveu quanto?' }, { role: 'assistant', content: 'Resumo com evidências verificadas.' }])
   })
   it('botão Enviar e sugestões fazem envios explícitos', async () => {
-    render(view())
+    await renderReady()
     fireEvent.change(screen.getByLabelText('Pergunte sobre os registros'), { target: { value: 'Há dados?' } })
     fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
     await screen.findByText('Resumo com evidências verificadas.')
@@ -68,7 +125,7 @@ describe('conversa de análise', () => {
   it('bloqueia duplicidade, cancela e ignora resultado atrasado', async () => {
     let finish!: (value: AiAssistResponse) => void
     vi.mocked(assist).mockImplementation(() => new Promise((resolve) => { finish = resolve }))
-    render(view())
+    await renderReady()
     const analyze = screen.getByRole('button', { name: 'Analisar período' })
     fireEvent.click(analyze); fireEvent.click(analyze)
     expect(assist).toHaveBeenCalledTimes(1)
@@ -86,7 +143,7 @@ describe('conversa de análise', () => {
   it.each(['filters', 'version'])('mudar %s cancela, limpa e impede resposta de escopo antigo', async (kind) => {
     let finish!: (value: AiAssistResponse) => void
     vi.mocked(assist).mockImplementation(() => new Promise((resolve) => { finish = resolve }))
-    const { rerender } = render(view())
+    const { rerender } = await renderReady()
     fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
     const next = kind === 'filters' ? { ...context, filters: { ...filters, from: '2026-02-20' } }
       : { ...context, data: { ...data, manifest: { ...data.manifest, generatedAt: '2026-10-27T12:00:00.000Z' } } }
@@ -98,7 +155,7 @@ describe('conversa de análise', () => {
     expect(assist).toHaveBeenCalledTimes(1)
   })
   it('desmontagem aborta a chamada e limpar remove o histórico', async () => {
-    const first = render(view())
+    const first = await renderReady()
     fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
     await screen.findByText('Resumo com evidências verificadas.')
     fireEvent.click(screen.getByRole('button', { name: 'Limpar conversa' }))
@@ -109,24 +166,26 @@ describe('conversa de análise', () => {
     first.unmount()
     expect(vi.mocked(assist).mock.calls[1][1].aborted).toBe(true)
   })
-  it('falha oferece nova tentativa explícita e limite mantém regras disponíveis', async () => {
+  it('falha oferece nova tentativa explícita e não cria indicadores', async () => {
     vi.mocked(assist).mockRejectedValueOnce(new AiClientError('RATE_LIMITED', 'Limite atingido. Aguarde.')).mockResolvedValueOnce(response())
-    render(view())
+    await renderReady()
     fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Limite atingido')
     expect(assist).toHaveBeenCalledTimes(1)
-    expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Indicadores por IA' })).toBeInTheDocument()
+    expect(document.querySelectorAll('.recommendations__item')).toHaveLength(0)
     fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
     await screen.findByText('Resumo com evidências verificadas.')
     expect(assist).toHaveBeenCalledTimes(2)
     expect(screen.getAllByText('Analisar período', { selector: 'p' })).toHaveLength(1)
   })
-  it('sem configuração informa indisponibilidade e preserva as seis regras', async () => {
-    vi.mocked(getAiStatus).mockResolvedValue({ configured: false, dataReady: true, datasetVersion: data.manifest.generatedAt, message: 'IA não configurada.' })
+  it('sem configuração informa indisponibilidade e mantém os indicadores vazios', async () => {
+    const status = aiStatusFor(data.manifest.generatedAt)
+    vi.mocked(getAiStatus).mockResolvedValue({ ...status, configured: false, message: 'IA não configurada.', providers: status.providers.map((option) => ({ ...option, configured: false })) })
     const { container } = render(view())
     await screen.findByText('IA não configurada.')
     expect(screen.getByRole('button', { name: 'Analisar período' })).toBeDisabled()
-    expect(container.querySelectorAll('.recommendations__item')).toHaveLength(6)
+    expect(container.querySelectorAll('.recommendations__item')).toHaveLength(0)
     expect(assist).not.toHaveBeenCalled()
   })
   it('recupera a disponibilidade sem recarregar a base nem fazer uma análise automática', async () => {
@@ -144,7 +203,7 @@ describe('conversa de análise', () => {
     expect(assist).toHaveBeenCalledTimes(1)
   })
   it('preserva os turnos concluídos e exclui perguntas com falha do próximo contexto', async () => {
-    render(view())
+    await renderReady()
     fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
     await screen.findByText('Resumo com evidências verificadas.')
     vi.mocked(assist).mockRejectedValueOnce(new AiClientError('PROVIDER_ERROR', 'Falha temporária.'))
@@ -159,7 +218,7 @@ describe('conversa de análise', () => {
   })
   it('versão divergente oferece recarregar sem repetir consumo', async () => {
     vi.mocked(assist).mockRejectedValueOnce(new AiClientError('DATASET_CHANGED', 'A base mudou.', false))
-    render(view())
+    await renderReady()
     fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Recarregar dados' }))
     expect(context.reload).toHaveBeenCalled()
