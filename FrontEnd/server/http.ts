@@ -89,6 +89,7 @@ export function createAiServer(config: Config, options: {
     res.once('close', disconnect)
     let slot = false
     let status = 200
+    let errorCode: string | undefined
     try {
       if (!localRequest(req)) throw new PublicError('INVALID_REQUEST', 'Origem ou host não permitido.', 403)
       const url = new URL(req.url ?? '/', 'http://localhost')
@@ -138,13 +139,14 @@ export function createAiServer(config: Config, options: {
       const error = controller.signal.aborted && controller.signal.reason instanceof PublicError ? controller.signal.reason
         : cause instanceof PublicError ? cause : new PublicError('PROVIDER_ERROR', 'Não foi possível concluir a análise.', 502, true)
       status = error.status
+      errorCode = error.code
       if (status === 429) res.setHeader('Retry-After', '60')
       json(res, status, { requestId, error: { code: error.code, message: error.message, retryable: error.retryable } })
     } finally {
       clearTimeout(timeout)
       if (slot) active--
       req.off('aborted', disconnect); res.off('close', disconnect)
-      log({ requestId, latencyMs: Math.round(performance.now() - started), status, ...usage })
+      log({ requestId, latencyMs: Math.round(performance.now() - started), status, ...(errorCode ? { errorCode } : {}), ...usage })
     }
   })
   server.requestTimeout = 15000

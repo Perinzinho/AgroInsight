@@ -60,6 +60,8 @@
 .shell__footer { display: flex; justify-content: space-between; gap: 14px; padding: 20px clamp(24px, 3vw, 46px); border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 10px; }
 .shell__footer strong { color: var(--color-green-dark); font-size: 14px; font-weight: 800; letter-spacing: -.5px; }
 .shell__footer strong span { font-weight: 450; }
+.shell__main--assistant { padding-top: 20px; padding-bottom: 16px; gap: 0; }
+.shell--assistant .shell__view { display: flex; flex: 1; animation: none; }
 @keyframes field-settle { from { transform: scale(1.04); } to { transform: scale(1); } }
 @keyframes field-intro { from { opacity: .7; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes view-change { from { opacity: .65; } to { opacity: 1; } }

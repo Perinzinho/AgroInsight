@@ -37,14 +37,14 @@ describe('catálogo de modelos', () => {
     expect(await store.list('gemini', signal())).toBe(catalog)
     expect(fetcher).toHaveBeenCalledTimes(2)
   })
-  it('OpenRouter oferece apenas modelos textuais com ferramentas e remove duplicados', async () => {
+  it('OpenRouter inclui modelos textuais sem ferramentas e remove duplicados', async () => {
     const model = { id: 'vendor/model', name: 'Modelo', supported_parameters: ['tools'], architecture: { output_modalities: ['text'] } }
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json({ data: [model, model,
       { ...model, id: 'vendor/no-tools', supported_parameters: [] },
       { ...model, id: 'vendor/image', architecture: { output_modalities: ['image'] } },
     ] }))
     const store = createModelStore(readConfig({ OPENROUTER_API_KEY: 'secret' }), fetcher)
-    expect((await store.list('openrouter', signal())).models).toEqual([{ id: model.id, name: model.name }])
+    expect((await store.list('openrouter', signal())).models).toEqual([{ id: model.id, name: model.name }, { id: 'vendor/no-tools', name: model.name }])
     expect(String(fetcher.mock.calls[0][0])).toBe('https://openrouter.ai/api/v1/models')
   })
   it('falha do catálogo é controlada, não armazena erro e pode ser tentada novamente', async () => {

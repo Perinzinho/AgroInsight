@@ -53,7 +53,7 @@ export function createModelStore(config: Config, fetcher: typeof fetch = fetch):
           const result = geminiPage.parse(await response.json())
           models.push(...result.models.filter((m) => m.name.startsWith('models/gemini-')
             && m.supportedGenerationMethods.includes('generateContent')
-            && !/image|tts|audio|live|robotics|embedding|computer-use|omni/i.test(m.name))
+            && !/image|tts|audio|live|robotics|embedding|computer-use|omni|transcribe|banana/i.test(m.name))
             .map((m) => ({ id: m.name.slice('models/'.length), name: (m.displayName ?? m.name).slice(0, 200) })))
           pageToken = result.nextPageToken
           if (!pageToken) break
@@ -64,8 +64,7 @@ export function createModelStore(config: Config, fetcher: typeof fetch = fetch):
           headers: { Authorization: `Bearer ${settings.key}` }, signal: requestSignal,
         })
         if (!response.ok) throw new Error('Catalog unavailable')
-        models = routerPage.parse(await response.json()).data.filter((m) => m.supported_parameters.includes('tools')
-          && (m.architecture?.output_modalities ?? ['text']).includes('text'))
+        models = routerPage.parse(await response.json()).data.filter((m) => (m.architecture?.output_modalities ?? ['text']).includes('text'))
           .map((m) => ({ id: m.id, name: m.name.slice(0, 200) }))
       }
       models = [...new Map(models.filter((m) => selectionSchema.safeParse({ provider, model: m.id }).success).map((m) => [m.id, m])).values()]

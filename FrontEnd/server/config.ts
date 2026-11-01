@@ -20,7 +20,7 @@ const envSchema = z.object({
   AI_PORT: integer(5175, 65535).refine((port) => ![4200, 8000].includes(port), 'Porta reservada a outro projeto'),
   AI_TIMEOUT_MS: integer(60000, 300000), AI_MAX_OUTPUT_TOKENS: integer(2000, 8000),
   AI_MAX_INPUT_TOKENS: integer(12000, 24000), AI_MAX_TOOL_ROUNDS: integer(4, 8),
-  AI_MAX_TOOL_CALLS: integer(8, 20), AI_MAX_PROVIDER_CALLS: integer(6, 12),
+  AI_MAX_TOOL_CALLS: integer(8, 20), AI_MAX_PROVIDER_CALLS: integer(2, 12),
   AI_RATE_LIMIT_PER_MINUTE: integer(10, 100), AI_MAX_CONCURRENT_REQUESTS: integer(2, 10),
   AI_DATA_DIR: z.string().min(1).default('./public/data'),
 })

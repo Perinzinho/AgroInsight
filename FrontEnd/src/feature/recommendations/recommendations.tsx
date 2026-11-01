@@ -1,24 +1,26 @@
 import { useMemo, useState } from 'react'
 import { useAgro } from '../../data/agroContext'
 import { buildRecommendationAnalysis } from './recommendationMessages'
+import AgroIcon from '../../core/components/agroIcon'
 import AiConversation from './aiConversation'
 import './recommendations.css'
 
 export default function Recommendations() {
-  const { data, filters, reload } = useAgro()
-  const scope = JSON.stringify([data?.manifest.generatedAt, filters.from, filters.to, [...filters.trapCodes].sort(), [...filters.pestKeys].sort()])
+  const { data, availableRange, reload } = useAgro()
+  // O assistente usa toda a propriedade, sem herdar filtros das outras telas.
+  const filters = useMemo(() => ({ from: availableRange.from, to: availableRange.to, trapCodes: [], pestKeys: [] }), [availableRange.from, availableRange.to])
+  const scope = JSON.stringify([data?.manifest.generatedAt, filters.from, filters.to])
   const [initialScope] = useState(scope)
   const analysis = useMemo(() => data ? buildRecommendationAnalysis(data, filters) : null, [data, filters])
   if (!analysis) return null
 
   return (
-    <section className="recommendations" aria-labelledby="recommendations-title">
-      <header className="recommendations__heading">
-        <h2 id="recommendations-title">Recomendações</h2>
-        <p>Ações priorizadas a partir dos dados de {analysis.period}.</p>
-      </header>
+    <section className="recommendations" aria-label="Assistente da propriedade">
       {data && <AiConversation filters={filters} datasetVersion={data.manifest.generatedAt} contextChanged={initialScope !== scope} onReload={reload} />}
-      <h3>Indicadores por regras</h3>
+      <details className="recommendations__rules">
+      <summary><AgroIcon name="quality" width="17" height="17" /><h2>Indicadores por regras</h2><span>{analysis.recommendations.length} verificações sem IA</span><AgroIcon name="chevron" width="14" height="14" /></summary>
+      <div className="recommendations__rules-body">
+      <p className="recommendations__scope">Verificações calculadas a partir dos registros de {analysis.period}, disponíveis mesmo sem um provedor de IA.</p>
       <ol className="recommendations__list">
         {analysis.recommendations.map((item) => (
           <li className="recommendations__item" key={item.id}>
@@ -35,7 +37,8 @@ export default function Recommendations() {
         ))}
       </ol>
       {analysis.partialOperations && <p className="recommendations__scope">As ordens de serviço selecionadas são analisadas por seus totais completos, incluindo trechos fora do período.</p>}
-      {(filters.trapCodes.length > 0 || filters.pestKeys.length > 0) && <p className="recommendations__scope">Os filtros de armadilha e praga se aplicam às detecções. Clima e operações seguem o período.</p>}
+      </div>
+      </details>
     </section>
   )
 }

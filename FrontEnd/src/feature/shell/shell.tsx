@@ -83,9 +83,10 @@ export default function Shell() {
   const farm = agro.data?.traps.property.farm
   const harvest = agro.data?.traps.property.harvest
   const isOverview = active.id === 'visao-geral'
+  const isAssistant = active.id === 'recomendacao-ia'
 
   return (
-    <div className="shell">
+    <div className={`shell${isAssistant ? ' shell--assistant' : ''}`}>
       <a className="shell__skip" href="#conteudo" onClick={(event) => { event.preventDefault(); document.getElementById('conteudo')?.focus() }}>Ir para o conteúdo</a>
       <aside className={`shell__sidebar ${menuOpen ? 'is-open' : ''}`}>
         <div className="shell__brand-row">
@@ -129,8 +130,8 @@ export default function Shell() {
             <a className="shell__help" href="#/qualidade" aria-label="Sobre os dados" title="Sobre os dados"><AgroIcon name="info" /></a>
           </div>
         </header>
-        <main className="shell__main" id="conteudo" tabIndex={-1}>
-          <div className="shell__breadcrumb"><span>{active.group}</span><AgroIcon name="chevron" width="12" height="12" /><span aria-current="location">{active.label}</span></div>
+        <main className={`shell__main${isAssistant ? ' shell__main--assistant' : ''}`} id="conteudo" tabIndex={-1}>
+          {!isAssistant && <><div className="shell__breadcrumb"><span>{active.group}</span><AgroIcon name="chevron" width="12" height="12" /><span aria-current="location">{active.label}</span></div>
           <header className={`shell__page-heading ${isOverview ? 'shell__page-heading--field' : ''}`}>
             {isOverview && <img className="shell__field-photo" src="/images/campo.jpg" alt="" fetchPriority="high" />}
             <div className="shell__heading-copy">
@@ -139,22 +140,22 @@ export default function Shell() {
               {isOverview && <a href="#/mapa" className="shell__field-action">Explorar armadilhas <AgroIcon name="arrowUpRight" width="17" height="17" /></a>}
             </div>
             {isOverview && <span className="shell__photo-caption">Paisagem ilustrativa</span>}
-          </header>
+          </header></>}
           {agro.status === 'error' ? (
             <DataState status="error" error={agro.error} onRetry={agro.reload}><></></DataState>
           ) : (
             <>
-              {active.id !== 'operacoes' && <FiltersBar />}
+              {active.id !== 'operacoes' && !isAssistant && <FiltersBar />}
               <DataState status={agro.status} error={agro.error} onRetry={agro.reload} empty={!agro.data} emptyText="Os dados da propriedade ainda não estão disponíveis.">
                 {agro.data && <>
                   <div className="shell__view" key={`${active.id}/${route.trapCode ?? ''}`}>{active.render(route)}</div>
-                  <p className="shell__provenance"><AgroIcon name="quality" width="15" height="15" /><span>Base atualizada em {formatDateTime(agro.data.manifest.generatedAt)}. Fuso {agro.data.manifest.datasetUtcOffset}.</span><a href="#/qualidade">Sobre os dados <AgroIcon name="arrowUpRight" width="13" height="13" /></a></p>
+                  {!isAssistant && <p className="shell__provenance"><AgroIcon name="quality" width="15" height="15" /><span>Base atualizada em {formatDateTime(agro.data.manifest.generatedAt)}. Fuso {agro.data.manifest.datasetUtcOffset}.</span><a href="#/qualidade">Sobre os dados <AgroIcon name="arrowUpRight" width="13" height="13" /></a></p>}
                 </>}
               </DataState>
             </>
           )}
         </main>
-        <footer className="shell__footer"><strong>agro<span>insight</span></strong><span>Um olhar atento à sua propriedade.</span></footer>
+        {!isAssistant && <footer className="shell__footer"><strong>agro<span>insight</span></strong><span>Um olhar atento à sua propriedade.</span></footer>}
       </div>
     </div>
   )

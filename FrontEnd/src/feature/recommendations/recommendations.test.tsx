@@ -1,7 +1,7 @@
 ﻿import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { AgroContext } from '../../data/agroContext'
 import type { AgroContextValue, Dataset, Filters } from '../../data/agroContext'
 import { countSeries, filterSeries } from '../../data/selectors'
@@ -37,7 +37,13 @@ describe('Recomendação (IA)', () => {
     const links = within(screen.getByRole('navigation', { name: 'Navegacao principal' })).getAllByRole('link')
     expect(links.at(-1)).toHaveTextContent('Recomendação (IA)')
     expect(links.at(-1)).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('heading', { name: 'Recomendações' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Assistente de campo' })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Atalhos de periodo' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '7 dias' })).not.toBeInTheDocument()
+    const rules = container.querySelector('.recommendations__rules')!
+    expect(rules).not.toHaveAttribute('open')
+    fireEvent.click(screen.getByRole('heading', { name: 'Indicadores por regras' }))
+    expect(rules).toHaveAttribute('open')
     expect(screen.queryByRole('heading', { name: 'Resumo da safra' })).not.toBeInTheDocument()
     expect(screen.queryByText('Modo demonstrativo')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Gerar novas recomendações' })).not.toBeInTheDocument()
@@ -46,9 +52,8 @@ describe('Recomendação (IA)', () => {
     expect(actions).toHaveLength(6)
     expect(screen.getAllByRole('link', { name: /Consultar dados/ })).toHaveLength(4)
     expect(screen.getAllByRole('link', { name: /Abrir histórico de operações/ })).toHaveLength(2)
-    expect(screen.getByRole('heading', { name: 'Análise por IA' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeEnabled()
     expect(assist).not.toHaveBeenCalled()
     rerender(<AgroContext.Provider value={{ ...context, filters: { ...filters } }}><Shell /></AgroContext.Provider>)
     expect(Array.from(container.querySelectorAll('.recommendations__item'), (node) => node.textContent)).toEqual(actions)

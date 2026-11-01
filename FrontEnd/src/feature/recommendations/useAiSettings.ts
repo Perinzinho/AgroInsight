@@ -31,10 +31,12 @@ export function useAiSettings() {
   ]
   const provider = providerOverride ?? status?.defaultSelection?.provider ?? (status?.configured ? 'openai' : 'gemini')
   const selectedProvider = providers.find((item) => item.id === provider)!
-  const currentCatalog = catalog?.provider === provider && catalog.attempt === modelsAttempt ? catalog : null
+  const providerCatalog = catalog?.provider === provider ? catalog : null
+  const currentCatalog = providerCatalog?.attempt === modelsAttempt ? providerCatalog : null
   const modelsError = modelFailure?.provider === provider && modelFailure.attempt === modelsAttempt ? modelFailure.error : null
-  const selection: AiSelection = { provider, model: modelOverrides[provider] ?? currentCatalog?.defaultModel ?? selectedProvider.defaultModel }
-  const models = currentCatalog?.models ?? [{ id: selection.model, name: selection.model }]
+  // Atualizar metadados não deve trocar temporariamente o modelo e apagar a conversa.
+  const selection: AiSelection = { provider, model: modelOverrides[provider] ?? providerCatalog?.defaultModel ?? selectedProvider.defaultModel }
+  const models = providerCatalog?.models ?? [{ id: selection.model, name: selection.model }]
   const modelsLoading = status !== null && !currentCatalog && !modelsError
   const unavailable = !status?.dataReady || !selectedProvider.configured || Boolean(modelsError)
     || !models.some((item) => item.id === selection.model)

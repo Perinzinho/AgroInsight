@@ -22,7 +22,9 @@ export const requestFor = (version: string): AssistRequest => ({ mode: 'analysis
 export const answer: AiAnswer = {
   summary: 'Leituras históricas para o período selecionado.',
   findings: [{ id: 'rain', title: 'Chuva registrada', priority: 2, explanation: 'A estação tem registros no período.',
-    suggestedAction: 'Confira a cobertura da estação.', evidenceIds: ['climate-rain'], limitations: ['O histórico não é previsão.'] }],
+    suggestedAction: 'Confira a cobertura da estação.', evidenceIds: ['climate-rain'], limitations: ['O histórico não é previsão.'] },
+  { id: 'pests', title: 'Inspecionar as capturas', priority: 2, explanation: 'As armadilhas têm registros no período.', suggestedAction: 'Confira as detecções em campo.', evidenceIds: ['pests-detections'], limitations: [] },
+  { id: 'machine', title: 'Revisar alertas', priority: 3, explanation: 'Há registros da frota no período.', suggestedAction: 'Revise os eventos nas ordens de serviço.', evidenceIds: ['machine-count'], limitations: [] }],
   limitations: ['Não há produtividade ou dados financeiros.'], followUpQuestions: ['Como ficou o balanço hídrico?'],
 }
 export const response = (output: Response['output'], status: Response['status'] = 'completed'): Response => ({

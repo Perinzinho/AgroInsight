@@ -24,7 +24,7 @@ export function useAiAssistant(filters: Filters, datasetVersion: string, selecti
     running.current = controller
     lastRequest.current = request
     setPending(true); setError(null); setNotice('')
-    if (appendUser) setMessages((current) => [...current, { role: 'user', content: request.mode === 'analysis' ? 'Analisar período' : request.message! }])
+    if (appendUser) setMessages((current) => [...current, { role: 'user', content: request.mode === 'analysis' ? 'Analisar a propriedade' : request.message! }])
     try {
       const response = await assist(request, controller.signal)
       if (mounted.current && running.current === controller && !controller.signal.aborted) {

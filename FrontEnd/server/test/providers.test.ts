@@ -8,74 +8,70 @@ import { answer, loadData, requestFor } from './helpers'
 let dataset: Dataset
 beforeAll(async () => { dataset = await loadData() })
 afterEach(() => vi.unstubAllGlobals())
-const completion = (message: unknown, finish_reason = 'tool_calls') => new Response(JSON.stringify({
-  id: 'completion', object: 'chat.completion', created: 0, model: 'test', choices: [{ index: 0, finish_reason, message }],
+const completion = (content: string | null = JSON.stringify(answer), finish_reason = 'stop', extra = {}) => new Response(JSON.stringify({
+  id: 'completion', object: 'chat.completion', created: 0, model: 'test', choices: [{ index: 0, finish_reason, message: { role: 'assistant', content, ...extra } }],
   usage: { prompt_tokens: 100, completion_tokens: 30, total_tokens: 130 },
 }), { status: 200, headers: { 'Content-Type': 'application/json' } })
-const call = (name: string, args = '{}') => ({ id: `call_${name}`, type: 'function', function: { name, arguments: args },
-  extra_content: { google: { thought_signature: 'opaque-signature' } } })
-const tool = () => ({ role: 'assistant', content: null, tool_calls: [call('consultarClima')],
-  reasoning_details: [{ type: 'reasoning.encrypted', data: 'opaque-reasoning' }] })
-const final = () => ({ role: 'assistant', content: null, tool_calls: [call('responderAnalise', JSON.stringify(answer))] })
 
-async function run(provider: 'gemini' | 'openrouter', config = readConfig({ GEMINI_API_KEY: 'gemini-test', OPENROUTER_API_KEY: 'router-test' })) {
-  const selection = { provider, model: provider === 'gemini' ? 'gemini-test' : 'vendor/model' }
+async function run(provider: 'gemini' | 'openrouter' | 'openai') {
+  const config = readConfig({ GEMINI_API_KEY: 'gemini-test', OPENROUTER_API_KEY: 'router-test', OPENAI_API_KEY: 'openai-test' })
+  const selection = { provider, model: provider === 'gemini' ? 'gemini-test' : provider === 'openai' ? 'gpt-test' : 'vendor/model' }
   return runAgent({ request: { ...requestFor(dataset.manifest.generatedAt), selection }, dataset, config,
     provider: createProvider(config, selection), signal: new AbortController().signal, requestId: 'provider-test',
     usage: { providerCalls: 0, toolCalls: 0, inputTokens: 0, outputTokens: 0 } })
 }
 
-describe('integração dos provedores de chat', () => {
-  it.each(['gemini', 'openrouter'] as const)('%s usa o endpoint e a chave corretos, preserva metadados e finaliza com evidências', async (provider) => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(completion(tool())).mockResolvedValueOnce(completion(final()))
+describe('chat textual entre provedores', () => {
+  it.each(['gemini', 'openrouter', 'openai'] as const)('%s usa a seleção explícita sem exigir tools ou structured outputs', async (provider) => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(completion())
     vi.stubGlobal('fetch', fetcher)
     const result = await run(provider)
-    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(fetcher).toHaveBeenCalledTimes(1)
     const [url, options] = fetcher.mock.calls[0]
-    expect(String(url)).toBe(provider === 'gemini' ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions')
-    expect(new Headers(options?.headers).get('authorization')).toBe(`Bearer ${provider === 'gemini' ? 'gemini-test' : 'router-test'}`)
-    const first = JSON.parse(String(options?.body))
-    expect(first.model).toBe(provider === 'gemini' ? 'gemini-test' : 'vendor/model')
-    expect(first.tools.some((t: { function: { name: string } }) => t.function.name === 'responderAnalise')).toBe(false)
-    const next = JSON.parse(String(fetcher.mock.calls[1][1]?.body))
-    expect(next.messages).toEqual(expect.arrayContaining([
-      tool(), expect.objectContaining({ role: 'tool', tool_call_id: 'call_consultarClima' }),
-    ]))
-    expect(next.tools.some((t: { function: { name: string } }) => t.function.name === 'responderAnalise')).toBe(true)
-    expect(result.selection?.provider).toBe(provider)
+    const base = { gemini: 'https://generativelanguage.googleapis.com/v1beta/openai', openrouter: 'https://openrouter.ai/api/v1', openai: 'https://api.openai.com/v1' }
+    expect(String(url)).toBe(`${base[provider]}/chat/completions`)
+    expect(new Headers(options?.headers).get('authorization')).toBe(`Bearer ${provider === 'gemini' ? 'gemini-test' : provider === 'openai' ? 'openai-test' : 'router-test'}`)
+    const body = JSON.parse(String(options?.body))
+    expect(body.model).toBe(result.selection?.model)
+    expect(body.tools).toBeUndefined()
+    expect(body.tool_choice).toBeUndefined()
+    expect(body.response_format).toBeUndefined()
+    expect(body.provider).toBeUndefined()
+    expect(body.temperature).toBeUndefined()
+    expect(body[provider === 'openai' ? 'max_completion_tokens' : 'max_tokens']).toBe(2000)
+    expect(body.messages.map((m: { role: string }) => m.role)).toEqual(['system', 'user'])
+    expect(body.messages[1].content).toContain('climate-rain')
     expect(result.answer.summary).toBe(answer.summary)
     expect(result.evidence.some((e) => e.id === 'climate-rain')).toBe(true)
-    expect(JSON.stringify(result)).not.toMatch(/opaque-|gemini-test.*Bearer|router-test/)
   })
-  it('limite de ferramentas força apenas a entrega final', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(completion(tool())).mockResolvedValueOnce(completion(final()))
+  it.each(['content_filter'])('não publica saída %s', async (reason) => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(completion(JSON.stringify(answer), reason))
     vi.stubGlobal('fetch', fetcher)
-    await run('gemini', readConfig({ GEMINI_API_KEY: 'test', AI_MAX_TOOL_ROUNDS: '1' }))
-    const body = JSON.parse(String(fetcher.mock.calls[1][1]?.body))
-    expect(body.tools).toHaveLength(1)
-    expect(body.tool_choice).toEqual({ type: 'function', function: { name: 'responderAnalise' } })
-  })
-  it.each([
-    final(),
-    { ...tool(), tool_calls: [...tool().tool_calls, ...final().tool_calls] },
-  ])('rejeita finalização sem evidências consultadas', async (message) => {
-    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(completion(message)))
-    await expect(run('gemini')).rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
-  })
-  it.each(['length', 'content_filter'])('não publica saída %s', async (reason) => {
-    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(completion(tool(), reason)))
     await expect(run('openrouter')).rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+  it('uma resposta truncada permite nova geração curta com contabilização do primeiro uso', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(completion('{"summary":', 'length')).mockResolvedValueOnce(completion())
+    vi.stubGlobal('fetch', fetcher)
+    await expect(run('gemini')).resolves.toHaveProperty('answer.summary', answer.summary)
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(JSON.parse(String(fetcher.mock.calls[1][1]?.body)).messages[0].content).toContain('excedeu o limite de saída')
+  })
+  it('rejeita chamadas de ferramentas não solicitadas e recusas', async () => {
+    for (const extra of [{ refusal: 'recusa' }, { tool_calls: [{ id: 'tool', type: 'function', function: { name: 'web_search', arguments: '{}' } }] }]) {
+      vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(completion(null, 'stop', extra)))
+      await expect(run('gemini')).rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
+    }
   })
   it('normaliza falta de crédito do OpenRouter sem expor a resposta externa', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ error: { message: 'private-credit-details' } }), { status: 402 })))
     await expect(run('openrouter')).rejects.toMatchObject({ code: 'PROVIDER_AUTH_OR_QUOTA' })
   })
-  it('inclui os metadados privados no orçamento da continuação', async () => {
-    const message = tool()
-    message.reasoning_details[0].data = 'large-opaque-signature '.repeat(15000)
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(completion(message))
+  it('limites e evidências são validados mesmo sem schema de geração nativo', async () => {
+    const oversized = { ...answer, limitations: Array.from({ length: 13 }, () => 'Limitação de teste.') }
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => completion(JSON.stringify(oversized)))
     vi.stubGlobal('fetch', fetcher)
-    await expect(run('gemini')).rejects.toMatchObject({ code: 'CONTEXT_LIMIT' })
-    expect(fetcher).toHaveBeenCalledTimes(1)
+    await expect(run('gemini')).rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
+    expect(fetcher).toHaveBeenCalledTimes(2)
   })
 })

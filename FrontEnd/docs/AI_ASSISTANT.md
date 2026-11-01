@@ -1,18 +1,24 @@
 # Assistente de análise local
 
-A rota `#/recomendacao-ia` oferece **Análise por IA** e mantém as seis ações em **Indicadores por regras**. O modelo só é chamado após **Analisar período**, **Enviar**, clique numa pergunta ou nova tentativa explícita. A consulta de status não chama o provedor.
+A rota `#/recomendacao-ia` oferece uma interface de conversa com o **Assistente de campo**. A caixa de pergunta reúne os seletores de provedor e modelo, envio por Enter e cancelamento. **Nova conversa** limpa o histórico e o rascunho. As seis verificações determinísticas continuam em **Indicadores por regras**, recolhidos por padrão.
+
+Esta tela não tem seletor de dias: o assistente usa todo o intervalo disponível da propriedade, sem herdar filtros de período, armadilhas ou pragas de outras telas. A cobertura aparece no rodapé e nas fontes das respostas. A janela continua sujeita ao limite de 366 dias da API. O modelo só é chamado após **Analisar propriedade**, **Enviar**, clique numa sugestão ou nova tentativa explícita. Consultar status e atualizar o catálogo não geram análises. Sem chave, é possível preparar um rascunho; o envio permanece bloqueado.
 
 ## Escolher o provedor e o modelo
 
 A interface permite escolher **Gemini** ou **OpenRouter** e um modelo do catálogo. Configure `GEMINI_API_KEY` e/ou `OPENROUTER_API_KEY` apenas no servidor. `AI_DEFAULT_PROVIDER` define a preferência inicial; se não estiver configurado, o servidor prefere outro provedor com chave. OpenAI permanece como opção quando `OPENAI_API_KEY` estiver configurada.
 
-O endpoint `GET /api/ai/models?provider=gemini` (ou `openrouter`) consulta somente metadados, sem gerar respostas. O backend usa as APIs oficiais com cache de cinco minutos. No Gemini, lista modelos de geração de texto, excluindo variantes dedicadas a imagem, áudio e outras modalidades. No OpenRouter, filtra modelos com saída de texto e suporte declarado a ferramentas. O catálogo não garante acesso, saldo ou compatibilidade de todas as opções de cada modelo; falhas são tratadas sem trocar de provedor/modelo silenciosamente. **Atualizar modelos** repete a leitura de metadados, respeitando o cache. Sem chave, exibe somente o modelo padrão configurado e bloqueia análises.
+O endpoint `GET /api/ai/models?provider=gemini` (ou `openrouter`) consulta somente metadados, sem gerar respostas. O backend usa as APIs oficiais com cache de cinco minutos. No Gemini, lista modelos de geração de texto, excluindo variantes dedicadas a imagem, áudio e outras modalidades. No OpenRouter, inclui modelos com saída de texto, mesmo sem suporte a ferramentas. O catálogo não garante acesso, saldo ou compatibilidade de todas as opções de cada modelo; falhas são tratadas sem trocar de provedor/modelo silenciosamente. **Atualizar modelos** repete a leitura de metadados, respeitando o cache. Sem chave, exibe somente o modelo padrão configurado e bloqueia análises.
 
 Trocar provedor ou modelo cancela a análise pendente e inicia outra conversa. Cada envio congela `selection: { provider, model }`; o backend rejeita modelos fora do catálogo e devolve a seleção efetivamente usada. A interface rejeita respostas com seleção divergente e mostra o provedor/modelo junto da análise. As escolhas e conversas ficam na memória da página.
 
-Gemini usa o endpoint de Chat Completions compatível do Google; OpenRouter usa seu endpoint de Chat Completions. Ambos consultam as mesmas ferramentas e entregam a resposta final por `responderAnalise`, uma função de saída que não executa consultas nem ações. O servidor valida os argumentos dessa saída contra o mesmo schema e o registro de evidências. Mensagens brutas do assistente, assinaturas de pensamento e metadados de raciocínio são preservados apenas durante o turno no backend. Eles não aparecem na resposta pública. O caminho anterior da OpenAI continua usando Responses.
+Gemini, OpenRouter e OpenAI usam seus endpoints de Chat Completions. O modelo recebe um dossiê compacto calculado pelo backend e responde em texto JSON. Não precisa suportar function calling, ferramentas ou Structured Outputs. O adaptador evita parâmetros opcionais como temperatura, schema nativo e roteamento obrigatório por ferramentas. A seleção de provedor/modelo permanece explícita; erros não provocam troca silenciosa.
 
-Referências oficiais: [compatibilidade do Gemini](https://ai.google.dev/gemini-api/docs/openai), [catálogo Gemini](https://ai.google.dev/api/models), [ferramentas no OpenRouter](https://openrouter.ai/docs/guides/features/tool-calling) e [catálogo OpenRouter](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties).
+O backend remove cercas de markdown e aceita um invólucro `answer`. Listas de apresentação omitidas (`limitations` e `followUpQuestions`) são normalizadas para listas vazias; valores, prioridades, ações e referências não são inventados ou completados. O schema completo e os IDs de evidência continuam sendo validados localmente. No máximo uma nova geração é permitida para corrigir JSON, limites de formato, referências inexistentes, saída truncada ou uma investigação que ignore os sinais disponíveis. Falhas de rede, autenticação e cota não têm retry automático.
+
+Isso amplia a compatibilidade com modelos de chat dos três provedores; não garante a mesma qualidade em todos os modelos. Modelos precisam compreender as instruções e produzir JSON no limite de saída configurado. Modelos dedicados a áudio/imagem são excluídos do catálogo quando identificados. A listagem não garante acesso, saldo ou disponibilidade para geração.
+
+Referências oficiais: [compatibilidade do Gemini](https://ai.google.dev/gemini-api/docs/openai), [Structured Outputs e JSON na OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=chat), [parâmetros do OpenRouter](https://openrouter.ai/docs/guides/routing/provider-selection) e [catálogo OpenRouter](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties).
 
 Para iniciar frontend e API juntos com containers, execute `docker compose up --build -d` na raiz do repositório. Veja o [guia do Docker](../../docker/README.md).
 
@@ -59,15 +65,15 @@ Abra `http://127.0.0.1:5174/#/recomendacao-ia`. Configure a chave antes de inici
 | `OPENROUTER_API_KEY` | vazio | Chave OpenRouter apenas no servidor |
 | `OPENROUTER_MODEL` | `openai/gpt-4.1-mini` | Modelo inicial no formato `provedor/modelo` |
 | `OPENAI_API_KEY` | vazio | Chave apenas no servidor |
-| `OPENAI_MODEL` | `gpt-4.1-mini` | Modelo com Responses, ferramentas e saída estruturada |
+| `OPENAI_MODEL` | `gpt-4.1-mini` | Modelo de chat com saída de texto JSON |
 | `AI_HOST` | `127.0.0.1` | `127.0.0.1`, `localhost`, `::1` ou `0.0.0.0` para a rede do container; no Compose, somente o proxy web publica uma porta local |
 | `AI_PORT` | `5175` | Porta da API e destino do proxy |
 | `AI_TIMEOUT_MS` | `60000` | Tempo total do turno, incluindo leitura dos dados |
 | `AI_MAX_OUTPUT_TOKENS` | `2000` | Saída máxima por chamada |
 | `AI_MAX_INPUT_TOKENS` | `12000` | Orçamento de contexto por chamada |
-| `AI_MAX_TOOL_ROUNDS` | `4` | Rodadas com ferramentas |
-| `AI_MAX_TOOL_CALLS` | `8` | Execuções totais de ferramentas |
-| `AI_MAX_PROVIDER_CALLS` | `6` | Chamadas totais ao provedor |
+| `AI_MAX_TOOL_ROUNDS` | `4` | Legado, sem efeito no fluxo com dossiê |
+| `AI_MAX_TOOL_CALLS` | `8` | Legado, sem efeito no fluxo com dossiê |
+| `AI_MAX_PROVIDER_CALLS` | `2` | Teto de chamadas; o fluxo limita a duas (geração e eventual correção) |
 | `AI_RATE_LIMIT_PER_MINUTE` | `10` | Turnos por IP local por minuto |
 | `AI_MAX_CONCURRENT_REQUESTS` | `2` | Turnos simultâneos no servidor |
 | `AI_DATA_DIR` | `./public/data` | Diretório administrativo do snapshot |
@@ -78,23 +84,24 @@ Todos os números são inteiros positivos com tetos validados em `server/config.
 
 O backend lê e valida os dez JSONs base do disco. Reutiliza um snapshot completo em memória e verifica metadados dos arquivos antes de reutilizá-lo. Uma atualização só substitui o snapshot após validação completa e conferência de estabilidade durante a leitura. Não regenere dados enquanto uma análise estiver em andamento.
 
-O contexto inicial contém fuso, dia atual da propriedade, filtros, cobertura e marcador de versão. A base inteira, geometrias, fotos e nomes de operadores não são enviados ao modelo. O modelo escolhe entre cinco consultas somente de leitura:
+Antes de chamar o modelo, o backend executa cinco leituras locais determinísticas: pragas, clima, fertilização, pulverização e alertas de máquina. Usa os seletores, limiares e indicadores por regras existentes, sem depender de o modelo escolher consultas. O dossiê inclui:
 
-| Ferramenta | Argumentos |
-| --- | --- |
-| `consultarResumo` | `{}` |
-| `consultarPragas` | `{}` |
-| `consultarClima` | `{}` |
-| `consultarOperacoes` | `{ "kind": "fertilization" / "spray" / "both" }` |
-| `consultarAlertasMaquina` | `{}` |
+- Filtros, dia local atual, versão, unidades, fontes e cobertura real de cada domínio.
+- Totais de capturas, ranking de pragas e amostra de avaliações diárias com limites e avisos preservados.
+- Chuva, evapotranspiração, saldo hídrico, dias com saldo negativo, temperaturas e lacunas.
+- OS selecionadas, trechos abaixo da dose configurada, pressão zero/ausente e escopo dos totais completos.
+- Alertas de máquina, classificação e raio de referência; sinais prioritários com verificações práticas.
+- Sobreposição de datas entre operações e pragas e declaração explícita dos dados indisponíveis, como produtividade.
 
-As consultas usam os seletores e o motor de limiares existentes. Rankings e séries têm até dez itens, com total e indicação de truncamento; agregados usam todos os registros filtrados. Cada domínio informa observações, cobertura, unidades, escopo, limitações e evidências. Ausência de cobertura não vira chuva ou detecção zero medida.
+Perguntas específicas selecionam sinais e detalhes do assunto; perguntas amplas recebem os domínios disponíveis. Seguimentos curtos também consideram o último assunto do usuário. Os números são sempre reconstruídos do snapshot atual. A base inteira, geometrias, fotos, nomes de operadores e assinaturas de raciocínio não são enviados. O dossiê é um resumo: não representa acesso irrestrito a todos os registros ou análise das imagens.
 
-O histórico envia somente perguntas e resumos curtos, sem reenviar respostas estruturadas completas. `js-tiktoken` conta o contexto serializado com `o200k_base`, compatível com o modelo inicial, reservando 512 tokens para enquadramento do protocolo. É uma estimativa de entrada; o uso efetivo retornado pela API é registrado. Se trocar para modelo com outro tokenizer, ajuste essa contagem e reavalie o orçamento. O custo depende de todas as chamadas e tokens do turno, não há preço fixo por conversa.
+`js-tiktoken` estima o contexto serializado com `o200k_base` e reserva espaço para enquadramento do protocolo e correção. O tokenizer é uma aproximação entre provedores; o uso efetivo retornado pelo provedor é registrado. Para caber no orçamento, primeiro são removidas mensagens antigas do histórico; depois o dossiê perde detalhes opcionais, preservando seus fatos e sinais principais. Se ainda não couber, a análise é rejeitada antes da chamada paga. JSONs não são cortados no meio e fatos excluídos não são liberados para citação.
 
-O SDK usa `maxRetries: 0`. O caminho Responses da OpenAI usa `store: false`. Isso não é promessa de retenção zero de todos os dados dos serviços. Itens de ferramentas e raciocínio necessários são preservados na continuação do mesmo turno. Ao atingir o limite de ferramentas, o backend tenta finalizar com os fatos já recebidos se ainda houver orçamento. Não há cache de análises ou conversas globais.
+Uma investigação ampla precisa explorar ao menos três domínios com sinais observados, quando disponíveis. Essa checagem evita publicar apenas “faltam dados de produtividade”, mas não comprova a correção semântica da resposta. Perguntas específicas e intervalos sem registros não exigem achados artificiais. O prompt solicita resposta direta, números, hipóteses cuidadosas e verificações concretas, sem diagnosticar a causa da queda da safra.
 
-O modelo produz somente `answer`. O servidor valida schema, prioridades e referências e resolve valores/fontes/URLs por um registro próprio. Evidências calculadas mas não enviadas ao modelo não podem ser citadas. Todos os links usam uma allowlist de rotas. O React renderiza texto, sem HTML ou Markdown arbitrário.
+O SDK usa `maxRetries: 0`. O fluxo normalmente faz uma geração e permite uma correção limitada, sem cache global de conversas ou análises. `AI_MAX_PROVIDER_CALLS=1` desabilita a correção. O campo de log `toolCalls` conta as cinco leituras locais do dossiê; não significa chamadas de ferramentas pelo modelo. O custo depende dos tokens e de todas as gerações do turno. Os endpoints de chat usam as políticas de retenção de cada provedor.
+
+O modelo produz somente `answer`. O servidor valida schema, prioridades, IDs únicos dos achados e referências; resolve valores/fontes/URLs por registro próprio. Evidências calculadas mas não incluídas no dossiê não podem ser citadas. Todos os links usam uma allowlist de rotas. O React renderiza texto, sem HTML ou Markdown arbitrário.
 
 ## API e estados
 
@@ -102,12 +109,25 @@ O modelo produz somente `answer`. O servidor valida schema, prioridades e refer�
 - `POST /api/ai/assist`: `mode`, `message`, `filters`, `datasetVersion`, `history`; retorna resposta estruturada, evidências e filtros efetivos.
 - Erros públicos têm `requestId`, `error.code`, `error.message` e `error.retryable`. Dados inválidos: 400; versão diferente: 409; corpo/contexto grande: 413; limites: 429; configuração/dados/autenticação/cota: 503; falha externa ou resposta inválida: 502; timeout: 504.
 - O marcador de compatibilidade é `manifest.generatedAt`; não é hash do conteúdo nem data de medição. Versão divergente é rejeitada antes de chamar o modelo.
-- Cancelar, sair da rota ou mudar filtros/versão aborta o trabalho pendente. Respostas antigas são ignoradas mesmo se o aborto chegar tarde. O processamento já realizado pode ser cobrado.
-- Conversas ficam apenas em memória no navegador. Mudança de contexto inicia conversa nova com aviso. Recarregar dados limpa também o cache de promessas do frontend.
+- Cancelar, sair da rota ou mudar a versão/cobertura da base aborta o trabalho pendente. Respostas antigas são ignoradas mesmo se o aborto chegar tarde. O processamento já realizado pode ser cobrado.
+- Conversas ficam apenas em memória no navegador. Mudança de provedor/modelo ou da base inicia conversa nova com aviso; filtros globais de outras telas não alteram o contexto do assistente. Atualizar o catálogo preserva o modelo e a conversa enquanto os metadados carregam. Recarregar dados limpa também o cache de promessas do frontend.
 - Apenas trocas concluídas entram no histórico da próxima consulta; perguntas com falha ou canceladas continuam visíveis, sem serem reenviadas como contexto. A nova tentativa explícita repete a requisição original.
 - **Verificar disponibilidade** consulta somente o status local, sem chamar o modelo, recarregar os dados ou limpar a conversa.
 
-Logs contêm apenas identificador da requisição, latência, status, chamadas e uso de tokens. Não contêm chave, corpo de pergunta ou dados completos. O servidor aceita somente host/origem locais e JSON, sem CORS aberto.
+Logs contêm apenas identificador da requisição, latência, status, código público de erro quando houver, chamadas e uso de tokens. Não contêm chave, corpo de pergunta, resposta bruta do provedor ou dados completos. O servidor aceita somente host/origem locais e JSON, sem CORS aberto.
+
+## Diagnóstico de falhas do provedor
+
+Carregar o catálogo não garante que a geração de respostas funcione com todos os modelos listados. Para esta configuração local, a geração com dossiê foi validada com `GEMINI_MODEL=gemini-2.5-flash-lite`; configure o modelo no `.env` e reinicie a API para mudar o padrão. A escolha também pode ser feita pela interface, sem fallback silencioso.
+
+- `PROVIDER_REQUEST_REJECTED` (502): o modelo rejeitou o formato da consulta; não repetir automaticamente o mesmo corpo.
+- `PROVIDER_MODEL_UNAVAILABLE` (503): o modelo não está disponível para a chave; atualizar a lista e escolher outro.
+- `PROVIDER_TIMEOUT` (504): o SDK atingiu o prazo sem resposta; tentar novamente ou escolher outro modelo.
+- `PROVIDER_CONNECTION` (503): falha de conexão entre o servidor e o provedor.
+- `PROVIDER_UNAVAILABLE` (503): indisponibilidade temporária informada pelo provedor.
+- `PROVIDER_AUTH_OR_QUOTA` e `RATE_LIMITED`: conferir configuração, cota e limites da conta.
+
+As mensagens públicas são fixas: erros externos brutos não são devolvidos ao navegador. Veja a [limitação de complexidade de schemas do Gemini](https://ai.google.dev/gemini-api/docs/structured-output).
 
 ## Limites agronômicos
 
@@ -146,4 +166,4 @@ Para executar o artefato com somente dependências de produção, gere os artefa
 
 Os mocks de teste nunca aparecem como IA na aplicação. Sem chave configurada, a chamada externa e a qualidade semântica do modelo ficam pendentes. Use o [roteiro revisável de avaliação](AI_VALIDATION.md) após configurar a chave localmente. Não publique sem definir acesso aos dados, hospedagem e orçamento da equipe.
 
-Referências oficiais usadas na implementação: [function calling](https://developers.openai.com/api/docs/guides/function-calling), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [estado e armazenamento](https://developers.openai.com/api/docs/guides/migrate-to-responses) e [autenticação](https://developers.openai.com/api/reference/overview#authentication).
+Referências oficiais do fluxo atual: [Structured Outputs e JSON na OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=chat), [chat compatível do Gemini](https://ai.google.dev/gemini-api/docs/openai) e [parâmetros do OpenRouter](https://openrouter.ai/docs/guides/routing/provider-selection).
