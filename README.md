@@ -1,5 +1,32 @@
 # AgroInsight
 
+## Rodar localmente (Node.js)
+
+Requer Node.js **24.19.0 ou superior**. Na raiz do projeto, prepare as dependências e os dados:
+
+```powershell
+cd FrontEnd
+npm.cmd ci
+npm.cmd run data:build
+```
+
+No mesmo terminal, inicie a API:
+
+```powershell
+npm.cmd run api:dev
+```
+
+Em outro terminal, a partir da raiz do projeto, inicie a interface:
+
+```powershell
+cd FrontEnd
+npm.cmd run dev -- --host 127.0.0.1 --port 5174 --strictPort
+```
+
+Abra **http://127.0.0.1:5174/**. Mantenha os dois terminais abertos; para parar, pressione `Ctrl+C` em cada um.
+
+A análise por IA é opcional. Para configurá-la, veja o [guia do assistente](FrontEnd/docs/AI_ASSISTANT.md).
+
 ## Rodar com Docker
 
 Na raiz do projeto:
