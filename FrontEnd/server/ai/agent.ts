@@ -20,14 +20,38 @@ export function parseAnswer(text: string): unknown {
   const end = clean.lastIndexOf('}')
   if (start < 0 || end < start) throw invalidResponse()
   let value: unknown = JSON.parse(clean.slice(start, end + 1))
-  if (value && typeof value === 'object' && Object.keys(value).length === 1 && 'answer' in value) value = value.answer
+  if (value && typeof value === 'object' && Object.keys(value).length === 1 && 'answer' in value) value = (value as Record<string, unknown>).answer
   if (value && typeof value === 'object' && !Array.isArray(value)) {
-    // Missing empty presentation lists carry no factual content. Required
-    // claims, priorities, evidence IDs and all supplied values stay untouched.
-    if (!('limitations' in value)) Object.assign(value, { limitations: [] })
-    if (!('followUpQuestions' in value)) Object.assign(value, { followUpQuestions: [] })
-    if ('findings' in value && Array.isArray(value.findings)) {
-      for (const finding of value.findings) if (finding && typeof finding === 'object' && !Array.isArray(finding) && !('limitations' in finding)) Object.assign(finding, { limitations: [] })
+    const val = value as Record<string, any>
+    if (!('limitations' in val)) val.limitations = []
+    else if (Array.isArray(val.limitations)) {
+      val.limitations = val.limitations
+        .map((item: any) => typeof item === 'string' ? item : item?.text ?? item?.limitation ?? (typeof item === 'object' ? Object.values(item)[0] : ''))
+        .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
+    }
+
+    if (!('followUpQuestions' in val)) val.followUpQuestions = []
+    else if (Array.isArray(val.followUpQuestions)) {
+      val.followUpQuestions = val.followUpQuestions
+        .map((item: any) => typeof item === 'string' ? item : item?.question ?? item?.text ?? item?.title ?? (typeof item === 'object' ? Object.values(item)[0] : ''))
+        .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
+    }
+
+    if ('findings' in val && Array.isArray(val.findings)) {
+      for (const finding of val.findings) {
+        if (finding && typeof finding === 'object' && !Array.isArray(finding)) {
+          if (!('limitations' in finding)) finding.limitations = []
+          else if (Array.isArray(finding.limitations)) {
+            finding.limitations = finding.limitations
+              .map((item: any) => typeof item === 'string' ? item : item?.text ?? (typeof item === 'object' ? Object.values(item)[0] : ''))
+              .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
+          }
+          if (typeof finding.priority === 'string') {
+            const match = finding.priority.match(/[123]/)
+            if (match) finding.priority = Number(match[0])
+          }
+        }
+      }
     }
   }
   return value
@@ -86,7 +110,9 @@ export async function runAgent(args: {
       const text = response.output.filter((item) => item.type === 'message').flatMap((item) => item.content)
         .filter((c) => c.type === 'output_text').map((c) => c.text).join('')
       let parsed: unknown
-      try { parsed = parseAnswer(text) } catch { feedback = 'A entrega anterior não era JSON válido. Gere novamente o objeto completo no formato solicitado.'; continue }
+      try { parsed = parseAnswer(text) } catch {
+        feedback = 'A entrega anterior não era JSON válido. Gere novamente o objeto completo no formato solicitado.'; continue
+      }
       const result = answerSchema.safeParse(parsed)
       if (!result.success) {
         feedback = `Corrija o formato e gere novamente a resposta completa. Campos inválidos: ${[...new Set(result.error.issues.map((issue) => issue.path.join('.')))].slice(0, 8).join(', ')}. Respeite os limites e todas as propriedades obrigatórias.`
@@ -95,7 +121,9 @@ export async function runAgent(args: {
       const answer: AiAnswer = result.data
       const knownIds = new Set(context.registry.all().map((e) => e.id))
       const ids = answer.findings.flatMap((finding) => finding.evidenceIds)
-      if (ids.some((id) => !knownIds.has(id))) { feedback = `Gere novamente usando apenas evidenceIds presentes em facts do dossiê: ${[...knownIds].join(', ')}.`; continue }
+      if (ids.some((id) => !knownIds.has(id))) {
+        feedback = `Gere novamente usando apenas evidenceIds presentes em facts do dossiê: ${[...knownIds].join(', ')}.`; continue
+      }
       const coveredSignals = context.packet.signals.filter((s) => s.id !== 'quality' && answer.findings.some((f) => f.evidenceIds.some((id) => s.evidenceIds.includes(id))))
       if (answer.findings.length < context.minimumFindings || (context.investigation && coveredSignals.length < context.minimumFindings)
         || new Set(answer.findings.map((f) => f.id)).size !== answer.findings.length) {
