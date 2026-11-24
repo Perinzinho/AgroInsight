@@ -6,7 +6,7 @@ Na **raiz do repositório**, execute `docker compose up --build -d` e abra **htt
 
 ## Assistente de análise agrícola
 
-A aba **Recomendação (IA)** tem chat com ferramentas de consulta e evidências, além dos indicadores por regras disponíveis sem API. A integração usa Node.js 24.19+, Responses API e chave somente no backend.
+A aba **Recomendação (IA)** permite escolher Gemini ou OpenRouter e o modelo, com chat, consultas e evidências. OpenAI continua disponível quando configurado. A integração usa Node.js 24.19+ e chaves somente no backend; os indicadores por regras funcionam sem API.
 
 Veja [execução local, configuração, limites e builds](docs/AI_ASSISTANT.md) e o [registro de validação](docs/AI_VALIDATION.md). Comece com `npm.cmd ci`, copie `.env.example` para `.env`, configure a chave localmente e execute `data:build`, `api:dev` e `dev` em dois terminais, conforme o guia.
 

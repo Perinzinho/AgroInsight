@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { assist, getAiStatus } from './aiClient'
+import { assist, getAiModels, getAiStatus } from './aiClient'
 import type { AssistRequest } from '../../shared/aiContracts'
 
 const request: AssistRequest = { mode: 'chat', message: 'Choveu?', filters: { from: '2026-02-19', to: '2026-02-25', trapCodes: [], pestKeys: [] }, datasetVersion: 'v1', history: [] }
@@ -25,6 +25,18 @@ describe('cliente HTTP da análise', () => {
   it('rejeita sucesso de outro contexto', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ...output, datasetVersion: 'v2' }) }))
     await expect(assist(request, new AbortController().signal)).rejects.toMatchObject({ code: 'DATASET_CHANGED' })
+  })
+  it('rejeita resposta com provedor ou modelo diferente do escolhido', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ...output, selection: { provider: 'openrouter', model: 'vendor/model' } }) }))
+    await expect(assist({ ...request, selection: { provider: 'gemini', model: 'gemini-test' } }, new AbortController().signal)).rejects.toMatchObject({ code: 'MODEL_CHANGED' })
+  })
+  it('consulta modelos pelo backend e rejeita um catálogo de outro provedor', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ provider: 'openrouter', defaultModel: 'v/model', models: [{ id: 'v/model', name: 'Modelo' }] }) })
+    vi.stubGlobal('fetch', fetcher)
+    const signal = new AbortController().signal
+    await expect(getAiModels('openrouter', signal)).resolves.toHaveProperty('defaultModel', 'v/model')
+    expect(fetcher).toHaveBeenCalledWith('/api/ai/models?provider=openrouter', { signal })
+    await expect(getAiModels('gemini', signal)).rejects.toMatchObject({ code: 'MODEL_CATALOG_UNAVAILABLE' })
   })
   it('trata indisponibilidade e JSON de erro controlado', async () => {
     const fetcher = vi.fn().mockResolvedValueOnce({ ok: false }).mockResolvedValueOnce({ ok: false, json: async () => ({ error: { code: 'AI_NOT_CONFIGURED', message: 'Não configurada.', retryable: false } }) })

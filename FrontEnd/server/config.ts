@@ -10,12 +10,17 @@ const integer = (fallback: number, max: number) => z.coerce.number().int().min(1
 const envSchema = z.object({
   OPENAI_API_KEY: z.string().trim().default(''),
   OPENAI_MODEL: z.string().trim().min(1).default('gpt-4.1-mini'),
+  GEMINI_API_KEY: z.string().trim().default(''),
+  GEMINI_MODEL: z.string().trim().min(1).default('gemini-3.8-flash'),
+  OPENROUTER_API_KEY: z.string().trim().default(''),
+  OPENROUTER_MODEL: z.string().trim().min(1).default('openai/gpt-4.1-mini'),
+  AI_DEFAULT_PROVIDER: z.enum(['gemini', 'openrouter', 'openai']).default('gemini'),
   // Containers listen on their network interface; Compose publishes only the local web proxy.
   AI_HOST: z.enum(['127.0.0.1', '::1', 'localhost', '0.0.0.0']).default('127.0.0.1'),
   AI_PORT: integer(5175, 65535).refine((port) => ![4200, 8000].includes(port), 'Porta reservada a outro projeto'),
   AI_TIMEOUT_MS: integer(60000, 300000), AI_MAX_OUTPUT_TOKENS: integer(2000, 8000),
   AI_MAX_INPUT_TOKENS: integer(12000, 24000), AI_MAX_TOOL_ROUNDS: integer(4, 8),
-  AI_MAX_TOOL_CALLS: integer(8, 20), AI_MAX_PROVIDER_CALLS: integer(6, 12),
+  AI_MAX_TOOL_CALLS: integer(8, 20), AI_MAX_PROVIDER_CALLS: integer(2, 12),
   AI_RATE_LIMIT_PER_MINUTE: integer(10, 100), AI_MAX_CONCURRENT_REQUESTS: integer(2, 10),
   AI_DATA_DIR: z.string().min(1).default('./public/data'),
 })

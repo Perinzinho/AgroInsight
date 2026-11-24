@@ -161,7 +161,9 @@ A família variável é servida de `FrontEnd/public/fonts/Manrope-Variable.ttf`,
 
 O shell tem navegação lateral fixa no fluxo por `sticky`, largura de 248px e conteúdo fluido. O miolo tem limite de 1600px e respiro horizontal fluido entre 24–46px. No desktop intermediário a lateral ocupa 220px; a partir de 1700px ocupa 272px.
 
-A tela de Operações exibe sempre todas as ordens de serviço da base, sem seletor de período. As demais telas mantêm o período compartilhado.
+A tela de Operações exibe sempre todas as ordens de serviço da base, sem seletor de período. Recomendação (IA) também usa toda a base disponível, sem herdar os filtros globais. As demais telas mantêm o período compartilhado.
+
+Na rota de IA, o assistente substitui o cabeçalho de dashboard por uma barra discreta e uma conversa com largura máxima de 760px. A entrada de texto ocupa o centro do estado inicial, com provedor/modelo integrados e sugestões compactas logo abaixo. Com mensagens, a entrada acompanha a rolagem na parte inferior; as respostas mantêm fontes, prioridades e limitações. Indicadores por regras ficam em uma seção expansível ao final. A superfície mantém Manrope, canvas claro e verde da marca, sem fotografia nem seletor de dias. Sem provedor, o rascunho continua editável e a conexão tem instrução e recuperação explícitas.
 
 A visão geral começa com panorama e título, período compartilhado, uma faixa de três indicadores, gráfico com clima e investigação das armadilhas. A faixa usa divisórias internas, sem transformar cada indicador em uma pilha de cartões. O gráfico e o clima usam colunas `1fr / .48fr`, com intervalo de 20px.
 

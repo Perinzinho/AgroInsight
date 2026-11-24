@@ -6,9 +6,9 @@ import { AgroContext } from '../../data/agroContext'
 import type { AgroContextValue, Dataset, Filters } from '../../data/agroContext'
 import type { AiAssistResponse } from '../../shared/aiContracts'
 import Recommendations from './recommendations'
-import { AiClientError, assist, getAiStatus } from './aiClient'
+import { AiClientError, assist, getAiModels, getAiStatus } from './aiClient'
 
-vi.mock('./aiClient', async (original) => ({ ...await original<typeof import('./aiClient')>(), assist: vi.fn(), getAiStatus: vi.fn() }))
+vi.mock('./aiClient', async (original) => ({ ...await original<typeof import('./aiClient')>(), assist: vi.fn(), getAiStatus: vi.fn(), getAiModels: vi.fn() }))
 const read = (file: string) => JSON.parse(readFileSync(resolve(`public/data/${file}.json`), 'utf8'))
 const data: Dataset = { manifest: read('manifest'), traps: read('traps'), pests: read('pests'), series: read('trap-series'), events: read('events/index'), climate: read('climate/daily'), fertilization: read('operations/fertilization'), spray: read('operations/spray'), machineAlerts: read('machine-alerts'), stopReasons: read('stop-reasons') }
 const filters: Filters = { from: '2026-02-19', to: '2026-02-25', trapCodes: [], pestKeys: [] }
@@ -22,18 +22,31 @@ const response = (f: Filters = filters): AiAssistResponse => ({
   evidence: [{ id: 'rain', label: 'Chuva', value: 12.5, unit: 'mm', source: 'Estação de teste', href: '#/clima', from: f.from, to: f.to, scope: 'Período' }],
 })
 const view = (value = context) => <AgroContext.Provider value={value}><Recommendations /></AgroContext.Provider>
+const multipleProviders = () => vi.mocked(getAiStatus).mockResolvedValue({ configured: true, dataReady: true, datasetVersion: data.manifest.generatedAt, message: null,
+  defaultSelection: { provider: 'gemini', model: 'gemini-test' },
+  providers: [{ id: 'gemini', configured: true, defaultModel: 'gemini-test' }, { id: 'openrouter', configured: true, defaultModel: 'vendor/model' }],
+})
+async function renderReady(value = context) {
+  const result = render(view(value))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeEnabled())
+  return result
+}
 beforeEach(() => {
   vi.mocked(getAiStatus).mockResolvedValue({ configured: true, dataReady: true, datasetVersion: data.manifest.generatedAt, message: null })
-  vi.mocked(assist).mockImplementation(async (request) => response(request.filters))
+  vi.mocked(assist).mockImplementation(async (request) => ({ ...response(request.filters), selection: request.selection }))
+  vi.mocked(getAiModels).mockImplementation(async (provider) => {
+    const model = provider === 'gemini' ? 'gemini-test' : provider === 'openrouter' ? 'vendor/model' : 'gpt-4.1-mini'
+    return { provider, defaultModel: model, models: [{ id: model, name: model }, { id: `${model}-other`, name: 'Outro modelo' }] }
+  })
 })
-afterEach(() => { vi.resetAllMocks() })
+afterEach(async () => { await act(async () => {}); vi.resetAllMocks() })
 
 describe('conversa de análise', () => {
   it('só consulta a IA após clique e mostra fontes, período e limitações', async () => {
-    render(view())
+    await renderReady()
     await waitFor(() => expect(getAiStatus).toHaveBeenCalledTimes(1))
     expect(assist).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
     expect(await screen.findByText('Resumo com evidências verificadas.')).toBeInTheDocument()
     expect(assist).toHaveBeenCalledWith(expect.objectContaining({ mode: 'analysis', filters, history: [], datasetVersion: data.manifest.generatedAt }), expect.any(AbortSignal))
     expect(screen.getByRole('heading', { name: 'Prioridade 2 · Chuva no período' })).toBeInTheDocument()
@@ -42,7 +55,7 @@ describe('conversa de análise', () => {
     expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
   })
   it('envia chat com Enter, preserva Shift+Enter e não envia durante composição', async () => {
-    render(view())
+    await renderReady()
     const input = screen.getByLabelText('Pergunte sobre os registros')
     fireEvent.change(input, { target: { value: 'Choveu quanto?' } })
     fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })
@@ -57,19 +70,19 @@ describe('conversa de análise', () => {
     expect(vi.mocked(assist).mock.calls[1][0].history).toEqual([{ role: 'user', content: 'Choveu quanto?' }, { role: 'assistant', content: 'Resumo com evidências verificadas.' }])
   })
   it('botão Enviar e sugestões fazem envios explícitos', async () => {
-    render(view())
+    await renderReady()
     fireEvent.change(screen.getByLabelText('Pergunte sobre os registros'), { target: { value: 'Há dados?' } })
     fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
     await screen.findByText('Resumo com evidências verificadas.')
-    fireEvent.click(screen.getByRole('button', { name: 'Como ficou o balanço hídrico?' }))
+    fireEvent.click(screen.getByRole('button', { name: /Como ficou o balanço hídrico/ }))
     await waitFor(() => expect(assist).toHaveBeenCalledTimes(2))
     expect(vi.mocked(assist).mock.calls[1][0].message).toBe('Como ficou o balanço hídrico?')
   })
   it('bloqueia duplicidade, cancela e ignora resultado atrasado', async () => {
     let finish!: (value: AiAssistResponse) => void
     vi.mocked(assist).mockImplementation(() => new Promise((resolve) => { finish = resolve }))
-    render(view())
-    const analyze = screen.getByRole('button', { name: 'Analisar período' })
+    await renderReady()
+    const analyze = screen.getByRole('button', { name: 'Analisar propriedade' })
     fireEvent.click(analyze); fireEvent.click(analyze)
     expect(assist).toHaveBeenCalledTimes(1)
     expect(analyze).toBeDisabled()
@@ -79,17 +92,16 @@ describe('conversa de análise', () => {
     expect(screen.queryByText('Resumo com evidências verificadas.')).not.toBeInTheDocument()
     expect(analyze).toBeEnabled()
     vi.mocked(assist).mockResolvedValueOnce(response())
-    fireEvent.click(screen.getByRole('button', { name: 'Quais pragas tiveram mais detecções?' }))
+    fireEvent.click(screen.getByRole('button', { name: /Quais pragas tiveram mais detecções/ }))
     await screen.findByText('Resumo com evidências verificadas.')
     expect(vi.mocked(assist).mock.calls[1][0].history).toEqual([])
   })
-  it.each(['filters', 'version'])('mudar %s cancela, limpa e impede resposta de escopo antigo', async (kind) => {
+  it('mudar a versão da base cancela, limpa e impede resposta de escopo antigo', async () => {
     let finish!: (value: AiAssistResponse) => void
     vi.mocked(assist).mockImplementation(() => new Promise((resolve) => { finish = resolve }))
-    const { rerender } = render(view())
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
-    const next = kind === 'filters' ? { ...context, filters: { ...filters, from: '2026-02-20' } }
-      : { ...context, data: { ...data, manifest: { ...data.manifest, generatedAt: '2026-10-27T12:00:00.000Z' } } }
+    const { rerender } = await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    const next = { ...context, data: { ...data, manifest: { ...data.manifest, generatedAt: '2026-10-27T12:00:00.000Z' } } }
     rerender(view(next))
     expect(vi.mocked(assist).mock.calls[0][1].aborted).toBe(true)
     await act(async () => finish(response()))
@@ -98,34 +110,35 @@ describe('conversa de análise', () => {
     expect(assist).toHaveBeenCalledTimes(1)
   })
   it('desmontagem aborta a chamada e limpar remove o histórico', async () => {
-    const first = render(view())
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    const first = await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
     await screen.findByText('Resumo com evidências verificadas.')
-    fireEvent.click(screen.getByRole('button', { name: 'Limpar conversa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }))
     expect(screen.queryByText('Resumo com evidências verificadas.')).not.toBeInTheDocument()
     vi.mocked(assist).mockImplementation(() => new Promise(() => {}))
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
     expect(vi.mocked(assist).mock.calls[1][0].history).toEqual([])
     first.unmount()
     expect(vi.mocked(assist).mock.calls[1][1].aborted).toBe(true)
   })
   it('falha oferece nova tentativa explícita e limite mantém regras disponíveis', async () => {
     vi.mocked(assist).mockRejectedValueOnce(new AiClientError('RATE_LIMITED', 'Limite atingido. Aguarde.')).mockResolvedValueOnce(response())
-    render(view())
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Limite atingido')
     expect(assist).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
     await screen.findByText('Resumo com evidências verificadas.')
     expect(assist).toHaveBeenCalledTimes(2)
-    expect(screen.getAllByText('Analisar período', { selector: 'p' })).toHaveLength(1)
+    expect(screen.getAllByText('Analisar a propriedade', { selector: 'p' })).toHaveLength(1)
   })
   it('sem configuração informa indisponibilidade e preserva as seis regras', async () => {
     vi.mocked(getAiStatus).mockResolvedValue({ configured: false, dataReady: true, datasetVersion: data.manifest.generatedAt, message: 'IA não configurada.' })
     const { container } = render(view())
     await screen.findByText('IA não configurada.')
-    expect(screen.getByRole('button', { name: 'Analisar período' })).toBeDisabled()
+    await waitFor(() => expect(screen.queryByText('Carregando modelos…')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeDisabled()
     expect(container.querySelectorAll('.recommendations__item')).toHaveLength(6)
     expect(assist).not.toHaveBeenCalled()
   })
@@ -135,34 +148,145 @@ describe('conversa de análise', () => {
     await screen.findByText(/A API local está indisponível/)
     const reloadCount = vi.mocked(context.reload).mock.calls.length
     fireEvent.click(screen.getByRole('button', { name: 'Verificar disponibilidade' }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar período' })).toBeEnabled())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeEnabled())
     expect(getAiStatus).toHaveBeenCalledTimes(2)
     expect(vi.mocked(context.reload).mock.calls).toHaveLength(reloadCount)
     expect(assist).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
     await screen.findByText('Resumo com evidências verificadas.')
     expect(assist).toHaveBeenCalledTimes(1)
   })
   it('preserva os turnos concluídos e exclui perguntas com falha do próximo contexto', async () => {
-    render(view())
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
     await screen.findByText('Resumo com evidências verificadas.')
     vi.mocked(assist).mockRejectedValueOnce(new AiClientError('PROVIDER_ERROR', 'Falha temporária.'))
-    fireEvent.click(screen.getByRole('button', { name: 'Como ficou o balanço hídrico?' }))
+    fireEvent.click(screen.getByRole('button', { name: /Como ficou o balanço hídrico/ }))
     await screen.findByRole('alert')
-    fireEvent.click(screen.getByRole('button', { name: 'Quais pragas tiveram mais detecções?' }))
+    fireEvent.click(screen.getByRole('button', { name: /Quais pragas tiveram mais detecções/ }))
     await waitFor(() => expect(screen.getAllByText('Resumo com evidências verificadas.')).toHaveLength(2))
     expect(vi.mocked(assist).mock.calls[2][0].history).toEqual([
-      { role: 'user', content: 'Analisar período' },
+      { role: 'user', content: 'Analisar a propriedade' },
       { role: 'assistant', content: 'Resumo com evidências verificadas.' },
     ])
   })
   it('versão divergente oferece recarregar sem repetir consumo', async () => {
     vi.mocked(assist).mockRejectedValueOnce(new AiClientError('DATASET_CHANGED', 'A base mudou.', false))
-    render(view())
-    fireEvent.click(screen.getByRole('button', { name: 'Analisar período' }))
+    await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Recarregar dados' }))
     expect(context.reload).toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument()
+  })
+  it('escolher OpenRouter cancela a consulta do Gemini e ignora a resposta antiga', async () => {
+    multipleProviders()
+    let finish!: (value: AiAssistResponse) => void
+    vi.mocked(assist).mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    expect(vi.mocked(assist).mock.calls[0][0].selection).toEqual({ provider: 'gemini', model: 'gemini-test' })
+    fireEvent.change(screen.getByLabelText('Provedor de IA'), { target: { value: 'openrouter' } })
+    expect(vi.mocked(assist).mock.calls[0][1].aborted).toBe(true)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeEnabled())
+    await act(async () => finish(response()))
+    expect(screen.queryByText('Resumo com evidências verificadas.')).not.toBeInTheDocument()
+    expect(assist).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    expect(vi.mocked(assist).mock.calls[1][0]).toMatchObject({ selection: { provider: 'openrouter', model: 'vendor/model' }, history: [] })
+    expect(screen.getByText('OpenRouter · vendor/model')).toBeInTheDocument()
+  })
+  it('troca de modelo limpa a conversa e só faz nova análise após envio explícito', async () => {
+    multipleProviders()
+    await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    fireEvent.change(screen.getByLabelText('Modelo'), { target: { value: 'gemini-test-other' } })
+    expect(screen.queryByText('Resumo com evidências verificadas.')).not.toBeInTheDocument()
+    expect(screen.getByText(/O provedor ou modelo mudou/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar modelos' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeEnabled())
+    expect(assist).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    expect(vi.mocked(assist).mock.calls[1][0]).toMatchObject({ selection: { provider: 'gemini', model: 'gemini-test-other' }, history: [] })
+  })
+  it('alterar filtros de outras telas preserva a conversa, o provedor e o modelo escolhidos', async () => {
+    multipleProviders()
+    const { rerender } = await renderReady()
+    fireEvent.change(screen.getByLabelText('Provedor de IA'), { target: { value: 'openrouter' } })
+    await waitFor(() => expect(screen.getByLabelText('Modelo')).toBeEnabled())
+    fireEvent.change(screen.getByLabelText('Modelo'), { target: { value: 'vendor/model-other' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    rerender(view({ ...context, filters: { ...filters, from: '2026-02-20' } }))
+    expect(screen.getByLabelText('Provedor de IA')).toHaveValue('openrouter')
+    expect(screen.getByLabelText('Modelo')).toHaveValue('vendor/model-other')
+    expect(screen.getByText('Resumo com evidências verificadas.')).toBeInTheDocument()
+    expect(assist).toHaveBeenCalledTimes(1)
+  })
+  it('usa toda a base disponível e ignora filtros globais de data, armadilha e praga', async () => {
+    const availableRange = { from: '2025-08-22', to: '2026-02-25' }
+    await renderReady({ ...context, availableRange, filters: { ...filters, trapCodes: ['CIGARRINHA3'], pestKeys: ['qualquer-praga'] } })
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    expect(assist).toHaveBeenCalledWith(expect.objectContaining({ filters: { ...availableRange, trapCodes: [], pestKeys: [] } }), expect.any(AbortSignal))
+    expect(context.setPeriod).not.toHaveBeenCalled()
+  })
+  it('permite preparar a pergunta sem provedor, mas não envia nem perde o rascunho ao verificar a conexão', async () => {
+    vi.mocked(getAiStatus).mockResolvedValue({ configured: false, dataReady: true, datasetVersion: data.manifest.generatedAt, message: 'IA não configurada.' })
+    render(view())
+    await screen.findByText('IA não configurada.')
+    const input = screen.getByLabelText('Pergunte sobre os registros')
+    expect(input).toBeEnabled()
+    fireEvent.change(input, { target: { value: 'Quais sinais merecem atenção?' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(input).toHaveValue('Quais sinais merecem atenção?')
+    expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Verificar disponibilidade' }))
+    await waitFor(() => expect(getAiStatus).toHaveBeenCalledTimes(2))
+    expect(screen.getByLabelText('Pergunte sobre os registros')).toHaveValue('Quais sinais merecem atenção?')
+    expect(assist).not.toHaveBeenCalled()
+  })
+  it('atualizar o catálogo preserva o modelo padrão, a conversa e o rascunho durante a consulta', async () => {
+    multipleProviders()
+    await renderReady()
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar propriedade' }))
+    await screen.findByText('Resumo com evidências verificadas.')
+    fireEvent.change(screen.getByLabelText('Pergunte sobre os registros'), { target: { value: 'E quanto ao clima?' } })
+    let finish!: (value: Awaited<ReturnType<typeof getAiModels>>) => void
+    vi.mocked(getAiModels).mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar modelos' }))
+    expect(screen.getByText('Carregando modelos…')).toBeInTheDocument()
+    expect(screen.getByText('Resumo com evidências verificadas.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Modelo')).toHaveValue('gemini-test')
+    expect(screen.getByLabelText('Pergunte sobre os registros')).toHaveValue('E quanto ao clima?')
+    await act(async () => finish({ provider: 'gemini', defaultModel: 'gemini-test', models: [{ id: 'gemini-test', name: 'Modelo' }] }))
+    expect(screen.getByText('Resumo com evidências verificadas.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Pergunte sobre os registros')).toHaveValue('E quanto ao clima?')
+    expect(assist).toHaveBeenCalledTimes(1)
+  })
+  it('falha ao listar modelos permite atualizar sem consumo de análise', async () => {
+    multipleProviders()
+    vi.mocked(getAiModels).mockRejectedValueOnce(new AiClientError('MODEL_CATALOG_UNAVAILABLE', 'Catálogo indisponível.'))
+    render(view())
+    await screen.findByText('Catálogo indisponível.')
+    expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeDisabled()
+    expect(screen.getByRole('heading', { name: 'Indicadores por regras' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar modelos' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeEnabled())
+    expect(assist).not.toHaveBeenCalled()
+  })
+  it('o status de configuração é específico do provedor selecionado', async () => {
+    vi.mocked(getAiStatus).mockResolvedValue({ configured: true, dataReady: true, datasetVersion: data.manifest.generatedAt, message: null,
+      defaultSelection: { provider: 'gemini', model: 'gemini-test' }, providers: [
+        { id: 'gemini', configured: true, defaultModel: 'gemini-test' }, { id: 'openrouter', configured: false, defaultModel: 'vendor/model' },
+      ] })
+    await renderReady()
+    fireEvent.change(screen.getByLabelText('Provedor de IA'), { target: { value: 'openrouter' } })
+    await screen.findByText(/OpenRouter não está configurado no servidor/)
+    await waitFor(() => expect(screen.queryByText('Carregando modelos…')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Analisar propriedade' })).toBeDisabled()
+    expect(assist).not.toHaveBeenCalled()
   })
 })
