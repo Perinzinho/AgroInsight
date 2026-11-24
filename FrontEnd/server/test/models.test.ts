@@ -47,13 +47,22 @@ describe('catálogo de modelos', () => {
     expect((await store.list('openrouter', signal())).models).toEqual([{ id: model.id, name: model.name }, { id: 'vendor/no-tools', name: model.name }])
     expect(String(fetcher.mock.calls[0][0])).toBe('https://openrouter.ai/api/v1/models')
   })
-  it('falha do catálogo é controlada, não armazena erro e pode ser tentada novamente', async () => {
+  it('sem catálogo mantém somente o modelo configurado e tenta atualizar após o cache curto', async () => {
     const fetcher = vi.fn<typeof fetch>().mockRejectedValueOnce(new Error('private-key')).mockResolvedValueOnce(json({ data: [
       { id: 'v/model', name: 'Modelo', supported_parameters: ['tools'] },
     ] }))
-    const store = createModelStore(readConfig({ OPENROUTER_API_KEY: 'private-key' }), fetcher)
-    await expect(store.list('openrouter', signal())).rejects.toMatchObject({ code: 'MODEL_CATALOG_UNAVAILABLE' })
-    expect((await store.list('openrouter', signal())).models).toHaveLength(1)
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(1000)
+    try {
+      const store = createModelStore(readConfig({ OPENROUTER_API_KEY: 'private-key', OPENROUTER_MODEL: 'v/default' }), fetcher)
+      const fallback = await store.list('openrouter', signal())
+      expect(fallback).toMatchObject({ degraded: true, defaultModel: 'v/default', models: [{ id: 'v/default' }] })
+      expect(JSON.stringify(fallback)).not.toContain('private-key')
+      expect(await store.list('openrouter', signal())).toBe(fallback)
+      expect(fetcher).toHaveBeenCalledTimes(1)
+      clock.mockReturnValue(11001)
+      expect((await store.list('openrouter', signal())).models).toEqual([{ id: 'v/model', name: 'Modelo' }])
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    } finally { clock.mockRestore() }
   })
   it('respeita aborto antes de consultar o catálogo', async () => {
     const controller = new AbortController(); controller.abort()

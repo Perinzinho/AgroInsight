@@ -12,6 +12,36 @@ import { estimateInputTokens } from './tokenBudget'
 
 export interface TurnUsage { providerCalls: number; toolCalls: number; inputTokens: number; outputTokens: number }
 
+// A single finding may cite several domains, but it cannot stand in for
+// several separate lines of investigation.
+function distinctSignalFindings(answer: AiAnswer, signals: { id: string; evidenceIds: string[] }[]) {
+  const assigned = new Map<string, number>()
+  const match = (findingIndex: number, visited: Set<string>): boolean => {
+    for (const signal of signals) {
+      if (visited.has(signal.id) || !answer.findings[findingIndex].evidenceIds.some((id) => signal.evidenceIds.includes(id))) continue
+      visited.add(signal.id)
+      const previous = assigned.get(signal.id)
+      if (previous === undefined || match(previous, visited)) {
+        assigned.set(signal.id, findingIndex)
+        return true
+      }
+    }
+    return false
+  }
+  answer.findings.forEach((_, index) => match(index, new Set()))
+  return assigned.size
+}
+
+function normalizeTextList(value: unknown, keys: string[]) {
+  if (!Array.isArray(value)) return value
+  return value.map((item: unknown) => {
+    if (typeof item === 'string') return item
+    if (item === null || typeof item !== 'object' || Array.isArray(item)) return ''
+    const fields = item as Record<string, unknown>
+    return keys.map((key) => fields[key]).find((field) => typeof field === 'string') ?? Object.values(fields)[0]
+  }).filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
+
 // Accept harmless wrappers used by text-only models; never repair values or
 // replace a failed generation with a locally fabricated assistant answer.
 export function parseAnswer(text: string): unknown {
@@ -22,30 +52,18 @@ export function parseAnswer(text: string): unknown {
   let value: unknown = JSON.parse(clean.slice(start, end + 1))
   if (value && typeof value === 'object' && Object.keys(value).length === 1 && 'answer' in value) value = (value as Record<string, unknown>).answer
   if (value && typeof value === 'object' && !Array.isArray(value)) {
-    const val = value as Record<string, any>
+    const val = value as Record<string, unknown>
     if (!('limitations' in val)) val.limitations = []
-    else if (Array.isArray(val.limitations)) {
-      val.limitations = val.limitations
-        .map((item: any) => typeof item === 'string' ? item : item?.text ?? item?.limitation ?? (typeof item === 'object' ? Object.values(item)[0] : ''))
-        .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
-    }
+    else val.limitations = normalizeTextList(val.limitations, ['text', 'limitation'])
 
     if (!('followUpQuestions' in val)) val.followUpQuestions = []
-    else if (Array.isArray(val.followUpQuestions)) {
-      val.followUpQuestions = val.followUpQuestions
-        .map((item: any) => typeof item === 'string' ? item : item?.question ?? item?.text ?? item?.title ?? (typeof item === 'object' ? Object.values(item)[0] : ''))
-        .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
-    }
+    else val.followUpQuestions = normalizeTextList(val.followUpQuestions, ['question', 'text', 'title'])
 
     if ('findings' in val && Array.isArray(val.findings)) {
       for (const finding of val.findings) {
         if (finding && typeof finding === 'object' && !Array.isArray(finding)) {
           if (!('limitations' in finding)) finding.limitations = []
-          else if (Array.isArray(finding.limitations)) {
-            finding.limitations = finding.limitations
-              .map((item: any) => typeof item === 'string' ? item : item?.text ?? (typeof item === 'object' ? Object.values(item)[0] : ''))
-              .filter((item: any) => typeof item === 'string' && item.trim().length > 0)
-          }
+          else finding.limitations = normalizeTextList(finding.limitations, ['text'])
           if (typeof finding.priority === 'string') {
             const match = finding.priority.match(/[123]/)
             if (match) finding.priority = Number(match[0])
@@ -124,10 +142,10 @@ export async function runAgent(args: {
       if (ids.some((id) => !knownIds.has(id))) {
         feedback = `Gere novamente usando apenas evidenceIds presentes em facts do dossiê: ${[...knownIds].join(', ')}.`; continue
       }
-      const coveredSignals = context.packet.signals.filter((s) => s.id !== 'quality' && answer.findings.some((f) => f.evidenceIds.some((id) => s.evidenceIds.includes(id))))
-      if (answer.findings.length < context.minimumFindings || (context.investigation && coveredSignals.length < context.minimumFindings)
+      const signalFindings = distinctSignalFindings(answer, context.packet.signals.filter((s) => s.id !== 'quality'))
+      if (answer.findings.length < context.minimumFindings || (context.investigation && signalFindings < context.minimumFindings)
         || new Set(answer.findings.map((f) => f.id)).size !== answer.findings.length) {
-        feedback = `A resposta anterior não explorou os fatos disponíveis. Apresente pelo menos ${context.minimumFindings} achados distintos, de domínios diferentes quando disponíveis em signals, com números, evidenceIds correspondentes e uma verificação prática. Não se limite à falta de produtividade. Use IDs únicos para os achados.`
+        feedback = `A resposta anterior não explorou os fatos disponíveis. Apresente pelo menos ${context.minimumFindings} achados distintos, cada um sustentado por um domínio diferente em signals quando disponível. Um achado com várias citações não substitui vários achados. Para cada um, explique o sinal, como ele poderia afetar a safra e indique uma verificação prática seguida de um próximo passo condicional. Use números, evidenceIds correspondentes e IDs únicos. Não se limite à falta de produtividade.`
         continue
       }
       return assistResponseSchema.parse({ requestId, selection: request.selection ?? { provider: 'openai', model: config.OPENAI_MODEL },

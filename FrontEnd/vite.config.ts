@@ -10,7 +10,10 @@ export default defineConfig(({ mode }) => {
   const { AI_HOST, AI_PORT } = readConfig({ AI_HOST: process.env.AI_HOST ?? env.AI_HOST, AI_PORT: process.env.AI_PORT ?? env.AI_PORT })
   return {
   plugins: [react()],
-  server: { proxy: { '/api/ai': { target: `http://${AI_HOST === '::1' ? '[::1]' : AI_HOST}:${AI_PORT}`, changeOrigin: false } } },
+  server: {
+    proxy: { '/api/ai': { target: `http://${AI_HOST === '::1' ? '[::1]' : AI_HOST}:${AI_PORT}`, changeOrigin: false } },
+    watch: { ignored: ['**/dist-server/**', '**/dist/**', '**/public/data/**'] },
+  },
   build: {
     rollupOptions: {
       output: {

@@ -31,6 +31,15 @@ describe('dossiê fundamentado da propriedade', () => {
     expect(packet.signals.map((s) => s.id)).toEqual(['pests'])
     expect(() => registry.resolve(packet.signals.flatMap((s) => s.evidenceIds))).not.toThrow()
   })
+  it('investiga uma safra ruim de forma ampla, mas mantém recomendações sobre pragas focadas', () => {
+    const broad = buildAnalysisContext(data, filters, 'Por que a safra foi ruim e o que fazer?', false)
+    expect(broad.minimumFindings).toBe(3)
+    expect(broad.packet.questionFocus).toContain('climate')
+    const focused = buildAnalysisContext(data, filters, 'O que fazer com as pragas nesta safra?', false)
+    expect(focused.minimumFindings).toBe(1)
+    expect(focused.packet.questionFocus).toEqual(['pests'])
+    expect(focused.packet.signals.map((s) => s.id)).toEqual(['pests'])
+  })
   it('compacta detalhes sem excluir fatos e sinais necessários à investigação', () => {
     const compact = buildAnalysisContext(data, filters, 'Investigue a safra', false, true)
     expect(compact.packet.details).toBeUndefined()

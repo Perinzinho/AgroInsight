@@ -15,7 +15,7 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
   const machine = queries.consultarAlertasMaquina()
   const analysis = buildRecommendationAnalysis(data, filters)
   const normalized = question.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  const investigation = overview || /caus|hipotes|investig|recomenda|atencao|prioriz|queda|diminui|reducao|(melhor|aument|perd).{0,30}(safra|produtividade|rendimento)/.test(normalized)
+  const cropQuestion = /safra|produtiv|rendimento|colheita|producao|quebra/.test(normalized)
   const domains = new Set<Domain>()
   if (/praga|inset|cigarr|lagart|armadilh|detecc|captur|vaquinha/.test(normalized)) domains.add('pests')
   if (/clima|chuv|chov|hidric|temperatura|seca|agua|evapotranspir|umidade/.test(normalized)) domains.add('climate')
@@ -23,7 +23,10 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
   if (/fertiliz|adub|dose|nutri/.test(normalized)) domains.add('fertilization')
   if (/operac|maquin|frota|alerta|parada|ocios/.test(normalized)) { domains.add('machine'); domains.add('spray'); domains.add('fertilization') }
   if (/qualidade|lacuna|divergen|confiav|cobertura/.test(normalized)) domains.add('quality')
-  if (investigation || domains.size === 0) Object.keys(domainLabels).forEach((key) => domains.add(key as Domain))
+  const broadInvestigation = overview || (cropQuestion && domains.size === 0)
+  const investigation = cropQuestion || overview || /caus|hipotes|investig|recomenda|atencao|prioriz|queda|diminui|reducao|melhor|aument|perd|resolver|o que fazer/.test(normalized)
+  // A request for recommendations about one subject should keep that focus.
+  if (broadInvestigation || domains.size === 0) Object.keys(domainLabels).forEach((key) => domains.add(key as Domain))
   const observed: Record<Domain, boolean> = { pests: pests.counts.captures > 0, climate: climate.observations > 0,
     spray: operations.domains.some((d) => d.kind === 'spray' && d.observations > 0),
     fertilization: operations.domains.some((d) => d.kind === 'fertilization' && d.observations > 0),
@@ -97,7 +100,7 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
     ],
   }
   const observedSignals = signals.filter((s) => s.id !== 'quality')
-  return { packet, registry, investigation, minimumFindings: investigation ? Math.min(3, observedSignals.length) : domains.size === 1 && observedSignals.length ? 1 : 0 }
+  return { packet, registry, investigation, minimumFindings: investigation ? Math.min(broadInvestigation || domains.size > 1 ? 3 : 1, observedSignals.length) : domains.size === 1 && observedSignals.length ? 1 : 0 }
 }
 
 export type AnalysisContext = ReturnType<typeof buildAnalysisContext>

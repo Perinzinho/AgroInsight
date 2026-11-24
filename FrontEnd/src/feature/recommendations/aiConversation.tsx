@@ -150,6 +150,7 @@ function ConversationSession({ filters, datasetVersion, contextChanged, onReload
           </div>
 
           {(settings.checkingStatus || settings.modelsLoading) && <p className="ai-conversation__notice" role="status">{settings.checkingStatus ? 'Verificando conexão…' : 'Carregando modelos…'}</p>}
+          {settings.catalogDegraded && <p className="ai-conversation__notice" role="status">A lista de modelos está indisponível. Você pode usar o modelo padrão configurado no servidor; a geração da resposta ainda depende da conexão com o provedor.</p>}
           {settings.modelsError && <p className="ai-conversation__error" role="alert">{settings.modelsError.message}</p>}
           {unavailable && !settings.modelsError && <div className="ai-conversation__connection">
             <AgroIcon name="info" width="16" height="16" />

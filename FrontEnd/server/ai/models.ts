@@ -75,7 +75,15 @@ export function createModelStore(config: Config, fetcher: typeof fetch = fetch):
       return catalog
     } catch {
       signal.throwIfAborted()
-      throw new PublicError('MODEL_CATALOG_UNAVAILABLE', 'Não foi possível listar os modelos. Verifique a chave do provedor no servidor e tente novamente.', 503, true)
+      // The catalog is optional metadata. Keep the administrator's exact
+      // configured model available when its listing endpoint is unreachable.
+      if (!selectionSchema.safeParse({ provider, model: settings.model }).success) {
+        throw new PublicError('MODEL_CATALOG_UNAVAILABLE', 'O modelo padrão configurado é inválido. Confira a configuração do servidor.', 503)
+      }
+      const fallback = modelCatalogSchema.parse({ provider, defaultModel: settings.model,
+        models: [{ id: settings.model, name: settings.model }], degraded: true })
+      cache.set(provider, { until: Date.now() + 10000, catalog: fallback })
+      return fallback
     }
   } }
 }

@@ -11,6 +11,7 @@ export type AiSelection = z.infer<typeof selectionSchema>
 export const modelCatalogSchema = z.object({
   provider: providerIdSchema, defaultModel: z.string(),
   models: z.array(z.object({ id: z.string().min(1).max(160), name: z.string().min(1).max(200) }).strict()).max(2000),
+  degraded: z.boolean().optional(),
 }).strict()
 export type ModelCatalog = z.infer<typeof modelCatalogSchema>
 

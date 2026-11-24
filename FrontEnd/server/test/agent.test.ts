@@ -46,6 +46,17 @@ describe('análise com recuperação determinística', () => {
     await expect(run({ create })).rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
     expect(create).toHaveBeenCalledTimes(2)
   })
+  it('não conta um achado com citações de três domínios como três investigações', async () => {
+    const combined = { ...answer, findings: [
+      { ...answer.findings[0], evidenceIds: ['climate-rain', 'pests-detections', 'machine-count'] },
+      { ...answer.findings[0], id: 'rain-2' },
+      { ...answer.findings[0], id: 'rain-3' },
+    ] }
+    const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse(combined))
+    await expect(run({ create })).rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(create.mock.calls[1][0].instructions).toContain('Um achado com várias citações não substitui vários achados')
+  })
   it('pergunta específica não exige achados de outros domínios', async () => {
     const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse({ ...answer, findings: [answer.findings[0]] }))
     await expect(runAgent({ request: { ...requestFor(dataset.manifest.generatedAt), mode: 'chat', message: 'Quanto choveu?', history: [{ role: 'user', content: 'O que causou a queda da safra?' }] }, dataset,

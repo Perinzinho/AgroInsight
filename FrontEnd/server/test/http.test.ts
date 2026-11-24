@@ -8,7 +8,7 @@ import { assistRequestSchema } from '../../src/shared/aiContracts'
 import { readConfig } from '../config'
 import { createAiServer } from '../http'
 import type { Provider } from '../ai/client'
-import type { ModelStore } from '../ai/models'
+import { createModelStore, type ModelStore } from '../ai/models'
 import { finalResponse, loadData, requestFor } from './helpers'
 
 let dataset: Dataset
@@ -61,6 +61,21 @@ describe('API HTTP local', () => {
     expect(invalid.status).toBe(400)
     expect(await invalid.json()).toMatchObject({ error: { code: 'INVALID_MODEL' } })
     expect(create).toHaveBeenCalledTimes(2)
+  })
+  it('usa o modelo padrão configurado quando a listagem externa falha', async () => {
+    const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse())
+    const fetcher = vi.fn<typeof fetch>().mockRejectedValue(new Error('external-network-down'))
+    const models = createModelStore(readConfig({ GEMINI_API_KEY: 'private-gemini', GEMINI_MODEL: 'gemini-test' }), fetcher)
+    const api = await start({ GEMINI_API_KEY: 'private-gemini', GEMINI_MODEL: 'gemini-test' }, { create }, undefined, models)
+    const listed = await fetch(`${api.url}/api/ai/models?provider=gemini`).then((r) => r.json())
+    expect(listed).toMatchObject({ degraded: true, models: [{ id: 'gemini-test' }] })
+    const result = await api.post({ ...requestFor(dataset.manifest.generatedAt), selection: { provider: 'gemini', model: 'gemini-test' } })
+    expect(result.status).toBe(200)
+    expect(create.mock.calls[0][0].model).toBe('gemini-test')
+    const invalid = await api.post({ ...requestFor(dataset.manifest.generatedAt), selection: { provider: 'gemini', model: 'other-model' } })
+    expect(invalid.status).toBe(400)
+    expect(await invalid.json()).toMatchObject({ error: { code: 'INVALID_MODEL' } })
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
   it('chave de outro provedor não habilita a escolha sem configuração', async () => {
     const create = vi.fn<Provider['create']>()

@@ -54,7 +54,8 @@ export function useAiSettings() {
   }, [provider, modelsAttempt, status])
 
   const changed = () => setNotice('O provedor ou modelo mudou. Uma nova conversa foi iniciada.')
-  return { status, checkingStatus, providers, selection, models, modelsLoading, modelsError, unavailable, notice,
+  return { status, checkingStatus, providers, selection, models, modelsLoading, modelsError,
+    catalogDegraded: Boolean(currentCatalog?.degraded), unavailable, notice,
     chooseProvider: (id: AiProviderId) => { if (id !== provider) { changed(); setProviderOverride(id) } },
     chooseModel: (model: string) => { if (model !== selection.model) { changed(); setModelOverrides((current) => ({ ...current, [provider]: model })) } },
     refreshModels: () => setModelsAttempt((value) => value + 1),
