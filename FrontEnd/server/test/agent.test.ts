@@ -40,6 +40,14 @@ describe('análise com recuperação determinística', () => {
     expect(create.mock.calls[1][0].instructions).toContain('não explorou os fatos disponíveis')
     expect(result.answer.findings).toHaveLength(3)
   })
+  it('aceita duas frentes verificáveis após a correção, sem descartar toda a resposta', async () => {
+    const partial = { ...answer, findings: answer.findings.slice(0, 2) }
+    const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse(partial))
+    const result = await run({ create })
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(result.answer.findings).toHaveLength(2)
+    expect(result.answer.limitations).toContain('Esta resposta cobriu menos frentes que os sinais disponíveis; confira também os indicadores por regras.')
+  })
   it('não aceita três achados repetidos do mesmo domínio como investigação ampla', async () => {
     const repeated = { ...answer, findings: [1, 2, 3].map((n) => ({ ...answer.findings[0], id: `rain-${n}` })) }
     const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse(repeated))
@@ -63,6 +71,40 @@ describe('análise com recuperação determinística', () => {
       provider: { create }, config: readConfig(), signal: new AbortController().signal, requestId: 'focused', usage: usageFor() })).resolves.toHaveProperty('answer.findings.length', 1)
     const content = (create.mock.calls[0][0].input as { content: string }[]).at(-1)!.content
     expect(JSON.parse(content.split('\n')[1]).questionFocus).toEqual(['climate'])
+  })
+  it('responde produtividade ausente sem reciclar o diagnóstico anterior', async () => {
+    const noYield = { ...answer, summary: 'Os CSVs não trazem produtividade colhida. Informe a produção por talhão e a data da colheita.', findings: [] }
+    const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse(noYield))
+    const request = { ...requestFor(dataset.manifest.generatedAt), mode: 'chat' as const,
+      message: 'Qual foi a produtividade desta safra?', history: [
+        { role: 'user' as const, content: 'Por que a safra foi ruim?' },
+        { role: 'assistant' as const, content: 'Resumo: Há sinais para investigar.\nAchados anteriores:\n1. Revisar a pulverização' },
+      ] }
+    const result = await runAgent({ request, dataset, provider: { create }, config: readConfig(),
+      signal: new AbortController().signal, requestId: 'yield', usage: usageFor() })
+    expect(result.answer.findings).toEqual([])
+    const params = create.mock.calls[0][0]
+    expect(params.instructions).toContain('não contêm essa medição')
+    expect(JSON.parse((params.input as { content: string }[]).at(-1)!.content.split('\n')[1]).answerGoal).toBe('yield')
+  })
+  it('rejeita um diagnóstico genérico quando o usuário pediu somente produtividade', async () => {
+    const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse())
+    await expect(runAgent({ request: { ...requestFor(dataset.manifest.generatedAt), mode: 'chat', message: 'Qual foi a produtividade da safra?' },
+      dataset, provider: { create }, config: readConfig(), signal: new AbortController().signal, requestId: 'yield-drift', usage: usageFor() }))
+      .rejects.toMatchObject({ code: 'INVALID_AI_RESPONSE' })
+    expect(create.mock.calls[1][0].instructions).toContain('desviou da pergunta atual')
+  })
+  it('usa o achado numerado anterior para focar um seguimento', async () => {
+    const sprayFinding = { ...answer.findings[0], id: 'spray', title: 'Revisar a pulverização', evidenceIds: ['spray-zeroPressureSegments'] }
+    const create = vi.fn<Provider['create']>().mockResolvedValue(finalResponse({ ...answer, findings: [sprayFinding] }))
+    await runAgent({ request: { ...requestFor(dataset.manifest.generatedAt), filters: { from: '2025-08-22', to: '2026-02-25', trapCodes: [], pestKeys: [] },
+      mode: 'chat', message: 'Explique melhor o primeiro achado', history: [
+        { role: 'user', content: 'Por que a safra foi ruim?' },
+        { role: 'assistant', content: 'Resumo: Há sinais a verificar.\nAchados anteriores:\n1. Revisar a pulverização\n2. Conferir o clima' },
+      ] }, dataset, provider: { create }, config: readConfig(), signal: new AbortController().signal, requestId: 'first', usage: usageFor() })
+    const params = create.mock.calls[0][0]
+    expect(JSON.parse((params.input as { content: string }[]).at(-1)!.content.split('\n')[1]).questionFocus).toEqual(['spray'])
+    expect(params.instructions).toContain('não recopie os achados anteriores')
   })
   it.each([
     { ...answer, findings: [{ ...answer.findings[0], evidenceIds: ['imaginary'] }] },

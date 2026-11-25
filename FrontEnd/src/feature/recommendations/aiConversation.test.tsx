@@ -67,7 +67,7 @@ describe('conversa de análise', () => {
     expect(input).toHaveValue('')
     fireEvent.click(screen.getByRole('button', { name: 'E o balanço?' }))
     await waitFor(() => expect(assist).toHaveBeenCalledTimes(2))
-    expect(vi.mocked(assist).mock.calls[1][0].history).toEqual([{ role: 'user', content: 'Choveu quanto?' }, { role: 'assistant', content: 'Resumo com evidências verificadas.' }])
+    expect(vi.mocked(assist).mock.calls[1][0].history).toEqual([{ role: 'user', content: 'Choveu quanto?' }, { role: 'assistant', content: expect.stringContaining('1. Chuva no período') }])
   })
   it('botão Enviar e sugestões fazem envios explícitos', async () => {
     await renderReady()
@@ -167,7 +167,7 @@ describe('conversa de análise', () => {
     await waitFor(() => expect(screen.getAllByText('Resumo com evidências verificadas.')).toHaveLength(2))
     expect(vi.mocked(assist).mock.calls[2][0].history).toEqual([
       { role: 'user', content: 'Analisar a propriedade' },
-      { role: 'assistant', content: 'Resumo com evidências verificadas.' },
+      { role: 'assistant', content: expect.stringContaining('1. Chuva no período') },
     ])
   })
   it('versão divergente oferece recarregar sem repetir consumo', async () => {

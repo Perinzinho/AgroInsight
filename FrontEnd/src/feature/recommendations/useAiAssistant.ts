@@ -4,6 +4,13 @@ import type { AiAssistResponse, AiSelection, AssistRequest } from '../../shared/
 import { AiClientError, assist } from './aiClient'
 
 export type ConversationMessage = { role: 'user'; content: string } | { role: 'assistant'; response: AiAssistResponse }
+
+export function historyAnswer(response: AiAssistResponse) {
+  const summary = `Resumo: ${response.answer.summary.slice(0, 800)}`
+  const findings = response.answer.findings.map((finding, index) => `${index + 1}. ${finding.title}`).join('\n')
+  return `${summary}${findings ? `\nAchados anteriores:\n${findings}` : ''}`.slice(0, 2000)
+}
+
 export function useAiAssistant(filters: Filters, datasetVersion: string, selection: AiSelection) {
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [error, setError] = useState<AiClientError | null>(null)
@@ -45,9 +52,9 @@ export function useAiAssistant(filters: Filters, datasetVersion: string, selecti
       const question = messages[index - 1]
       return item.role === 'assistant' && question?.role === 'user'
         ? [{ role: 'user' as const, content: question.content.slice(0, 2000) },
-          { role: 'assistant' as const, content: item.response.answer.summary.slice(0, 2000) }]
+          { role: 'assistant' as const, content: historyAnswer(item.response) }]
         : []
-    }).slice(-12)
+    }).slice(-8)
     while (history.reduce((sum, item) => sum + item.content.length, 0) > 12000) history.splice(0, 2)
     void execute({ mode, message: message?.trim(), filters: structuredClone(filters), datasetVersion, history, selection: { ...selection } }, true)
   }

@@ -4,9 +4,25 @@ import { EvidenceRegistry } from '../data/evidenceRegistry'
 import { createQueries } from './queries'
 
 type Domain = 'pests' | 'climate' | 'spray' | 'fertilization' | 'machine' | 'quality'
+type AnswerGoal = 'diagnosis' | 'actions' | 'yield' | 'ranking' | 'measurement' | 'details'
 const domainLabels: Record<Domain, string> = { pests: 'Pragas', climate: 'Clima', spray: 'Pulverização', fertilization: 'Fertilização', machine: 'Alertas de máquina', quality: 'Qualidade dos dados' }
 
-export function buildAnalysisContext(data: Dataset, filters: Filters, question: string, overview: boolean, compact = false) {
+const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+function findDomains(value: string) {
+  const domains = new Set<Domain>()
+  if (/praga|inset|cigarr|lagart|armadilh|detecc|captur|vaquinha/.test(value)) domains.add('pests')
+  if (/clima|chuv|chov|hidric|temperatura|seca|agua|evapotranspir|umidade/.test(value)) domains.add('climate')
+  if (/pulver|pressao|bomba|bico/.test(value)) domains.add('spray')
+  if (/fertiliz|adub|dose|nutri/.test(value)) domains.add('fertilization')
+  if (/maquin|frota|alerta|parada|ocios/.test(value)) domains.add('machine')
+  if (/operac/.test(value) && !domains.has('spray') && !domains.has('fertilization') && !domains.has('machine')) {
+    domains.add('machine'); domains.add('spray'); domains.add('fertilization')
+  }
+  if (/qualidade|lacuna|divergen|confiav|cobertura/.test(value)) domains.add('quality')
+  return domains
+}
+
+export function buildAnalysisContext(data: Dataset, filters: Filters, question: string, overview: boolean, compact = false, focusQuestion = question) {
   const staging = new EvidenceRegistry()
   const queries = createQueries(data, filters, staging)
   const pests = queries.consultarPragas()
@@ -14,19 +30,21 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
   const operations = queries.consultarOperacoes('both')
   const machine = queries.consultarAlertasMaquina()
   const analysis = buildRecommendationAnalysis(data, filters)
-  const normalized = question.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const normalized = normalize(question)
+  const questionDomains = findDomains(normalized)
   const cropQuestion = /safra|produtiv|rendimento|colheita|producao|quebra/.test(normalized)
-  const domains = new Set<Domain>()
-  if (/praga|inset|cigarr|lagart|armadilh|detecc|captur|vaquinha/.test(normalized)) domains.add('pests')
-  if (/clima|chuv|chov|hidric|temperatura|seca|agua|evapotranspir|umidade/.test(normalized)) domains.add('climate')
-  if (/pulver|pressao|bomba|bico/.test(normalized)) domains.add('spray')
-  if (/fertiliz|adub|dose|nutri/.test(normalized)) domains.add('fertilization')
-  if (/operac|maquin|frota|alerta|parada|ocios/.test(normalized)) { domains.add('machine'); domains.add('spray'); domains.add('fertilization') }
-  if (/qualidade|lacuna|divergen|confiav|cobertura/.test(normalized)) domains.add('quality')
-  const broadInvestigation = overview || (cropQuestion && domains.size === 0)
-  const investigation = cropQuestion || overview || /caus|hipotes|investig|recomenda|atencao|prioriz|queda|diminui|reducao|melhor|aument|perd|resolver|o que fazer/.test(normalized)
-  // A request for recommendations about one subject should keep that focus.
-  if (broadInvestigation || domains.size === 0) Object.keys(domainLabels).forEach((key) => domains.add(key as Domain))
+  const asksWhy = /por que|porque|caus|hipotes|investig|queda|caiu|cair|ruim|problema|falh|diminui|reducao|perda/.test(normalized)
+  const asksAction = /o que (devo |posso )?fazer|como (resolver|melhorar|evitar|prevenir|corrigir)|recomenda|proximos passos|plano de acao|prioriz/.test(normalized)
+  const asksYield = cropQuestion && questionDomains.size === 0 && /qual|quanto|quantas|medid|sacas|toneladas|rendeu/.test(normalized)
+    && !/por que|porque|caus|hipotes|investig/.test(normalized) && !asksAction
+  const asksRanking = /ranking|mais detecc|mais captur|pragas?.*mais.*detecc|maior numero de detecc/.test(normalized)
+  const asksMeasurement = /quanto|quantas|qual foi|total|numero de|media de/.test(normalized)
+  const goal: AnswerGoal = overview ? 'diagnosis' : asksAction ? 'actions' : asksYield ? 'yield' : asksWhy ? 'diagnosis'
+    : asksRanking ? 'ranking' : asksMeasurement ? 'measurement' : 'details'
+  const domains = findDomains(normalize(focusQuestion))
+  const broadInvestigation = overview || (domains.size === 0 && (goal === 'diagnosis' || goal === 'actions'))
+  const investigation = goal === 'diagnosis' || goal === 'actions'
+  if (domains.size === 0 && goal !== 'yield') Object.keys(domainLabels).forEach((key) => domains.add(key as Domain))
   const observed: Record<Domain, boolean> = { pests: pests.counts.captures > 0, climate: climate.observations > 0,
     spray: operations.domains.some((d) => d.kind === 'spray' && d.observations > 0),
     fertilization: operations.domains.some((d) => d.kind === 'fertilization' && d.observations > 0),
@@ -64,7 +82,7 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
   const visibleIds = new Set(signals.flatMap((s) => s.evidenceIds))
   if (domains.has('pests') && !compact) pests.evidence.filter((e) => e.id.startsWith('pest-day-')).slice(0, 3).forEach((e) => visibleIds.add(e.id))
   // Focused questions still receive basic facts and coverage from every domain.
-  ;(['pests-detections', 'climate-rain', 'climate-balance', 'spray-orders', 'fertilization-orders', 'machine-count'] as const).forEach((id) => visibleIds.add(id))
+  if (goal !== 'yield') (['pests-detections', 'climate-rain', 'climate-balance', 'spray-orders', 'fertilization-orders', 'machine-count'] as const).forEach((id) => visibleIds.add(id))
   const available = new Map(staging.all().map((e) => [e.id, e]))
   for (const id of visibleIds) {
     const evidence = available.get(id)
@@ -77,7 +95,7 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
   const packet = {
     scope: { ...filters, timezone: data.manifest.datasetTimezone, datasetVersion: data.manifest.generatedAt,
       currentLocalDay: new Intl.DateTimeFormat('en-CA', { timeZone: data.manifest.datasetTimezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) },
-    questionFocus: [...domains], investigation,
+    questionFocus: [...domains], answerGoal: goal, investigation,
     availableData: { pestDetections: observed.pests, weather: observed.climate, fertilization: observed.fertilization, spray: observed.spray,
       machineAlerts: observed.machine, yieldMeasurements: false, financialLosses: false, soilMoisture: false, photosAnalyzed: false },
     coverage, sources, facts, signals,
@@ -91,6 +109,9 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
         ({ day, trapCode, pestName, detections, culture, thresholdSummary, thresholdsMissing, cultureMismatch, variantsConflicting, note })) : undefined,
       weather: domains.has('climate') ? { ...climate.metrics, units: climate.units, worstBalanceDays: [...climateDays].sort((a, b) => a.waterBalance - b.waterBalance).slice(0, 3).map(({ day, precipitation, evapotranspiration, waterBalance }) => ({ day, precipitation, evapotranspiration, waterBalance })) } : undefined,
       machineTypes: domains.has('machine') ? machine.types.items.slice(0, 3) : undefined,
+      trapRanking: domains.has('pests') && !broadInvestigation ? pests.ranking.items.slice(0, 5) : undefined,
+      operationOrders: !broadInvestigation && (domains.has('spray') || domains.has('fertilization'))
+        ? operations.domains.filter((d) => domains.has(d.kind)).map((d) => ({ kind: d.kind, total: d.orders.total, orders: d.orders.items.slice(0, 5) })) : undefined,
     },
     cautions: [
       'Cobertura partial significa que há registros em parte do intervalo; não significa ausência de dados.',
@@ -100,7 +121,14 @@ export function buildAnalysisContext(data: Dataset, filters: Filters, question: 
     ],
   }
   const observedSignals = signals.filter((s) => s.id !== 'quality')
-  return { packet, registry, investigation, minimumFindings: investigation ? Math.min(broadInvestigation || domains.size > 1 ? 3 : 1, observedSignals.length) : domains.size === 1 && observedSignals.length ? 1 : 0 }
+  const minimumFindings = goal === 'yield' ? 0 : investigation
+    ? Math.min(broadInvestigation ? 3 : domains.size > 1 ? 2 : 1, observedSignals.length)
+    : observedSignals.length && domains.size > 0 ? 1 : 0
+  const maximumFindings = goal === 'yield' ? 0 : goal === 'measurement' ? 1
+    : goal === 'ranking' || broadInvestigation ? 4 : domains.size > 1 ? 3 : 2
+  const focusEvidenceIds = broadInvestigation ? [] : [...domains].flatMap((domain) => perDomain[domain])
+  if (!broadInvestigation && domains.has('pests')) focusEvidenceIds.push(...pests.evidence.filter((e) => e.id.startsWith('pest-day-')).map((e) => e.id))
+  return { packet, registry, investigation, broadInvestigation, goal, minimumFindings, maximumFindings, focusEvidenceIds }
 }
 
 export type AnalysisContext = ReturnType<typeof buildAnalysisContext>
